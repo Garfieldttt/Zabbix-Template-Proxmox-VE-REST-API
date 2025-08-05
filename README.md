@@ -4,7 +4,7 @@ This Zabbix template enables full monitoring of a Proxmox VE environment via the
 
 ## Requirements
 
-- **Zabbix Server / Proxy** version 7.0 or higher  
+- **Zabbix Server** version 7.0 or higher  
 - **HTTP Agent** module enabled on the Zabbix server  
 - Proxmox VE API token with read permissions for Nodes, Tasks, Storage, LXC, QEMU, and Access  
 - Host macros defined on the Zabbix host object (see “Macros” section)
