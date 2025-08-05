@@ -756,7 +756,7 @@ zabbix_export:
               key: 'lxc.netin[{#VMID}]'
               delay: '0'
               units: Bytes
-              description: 'Host-level network input on Proxmox host for LXC {#VMID}'
+              description: 'Cumulative host-level network input (bytes received) on Proxmox host for LXC {#VMID}, since last LXC start.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
@@ -780,7 +780,7 @@ zabbix_export:
               key: 'lxc.netout[{#VMID}]'
               delay: '0'
               units: Bytes
-              description: 'Host-level network output on Proxmox host for LXC {#VMID}'
+              description: 'Cumulative host-level network input (bytes received) on Proxmox host for LXC {#VMID}, since last LXC start.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
@@ -1174,7 +1174,7 @@ zabbix_export:
               key: 'vm.netin[{#VMID}]'
               delay: '0'
               units: Bytes
-              description: 'Host-level network input on Proxmox host for VM {#VMID}'
+              description: 'Cumulative host-level network input (bytes received) on Proxmox host for VM {#VMID}, since last VM start.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
@@ -1198,7 +1198,7 @@ zabbix_export:
               key: 'vm.netout[{#VMID}]'
               delay: '0'
               units: Bytes
-              description: 'Host-level network output on Proxmox host for VM {#VMID}'
+              description: 'Cumulative host-level network input (bytes received) on Proxmox host for VM {#VMID}, since last VM start.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
