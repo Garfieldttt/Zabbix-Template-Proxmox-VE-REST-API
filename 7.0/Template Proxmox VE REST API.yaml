@@ -1376,7 +1376,7 @@ zabbix_export:
             - uuid: 466cbbbcc546410880cdc89fc18496c0
               name: 'CPU usage {#VMID}'
               graph_items:
-                - color: FFFF00
+                - color: 0D47A1
                   calc_fnc: ALL
                   item:
                     host: 'Template Proxmox VE REST API'
