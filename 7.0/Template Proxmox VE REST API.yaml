@@ -7,6 +7,12 @@ zabbix_export:
     - uuid: 512de161946b46af952076320eb2b366
       template: 'Template Proxmox VE REST API'
       name: 'Template Proxmox VE REST API'
+      description: |
+        Zabbix template for monitoring Proxmox VE virtual machines using the REST API. No Zabbix agent is required inside the VMs.
+        
+        Created by Thomas Rzen.  
+        For documentation, updates, and source code, visit:  
+        https://github.com/Garfieldttt/Zabbix-Template-Proxmox-VE-REST-API
       groups:
         - name: Templates
       items:
@@ -1108,6 +1114,26 @@ zabbix_export:
                   value: CPU
                 - tag: QEMU/KVM-VMs
                   value: '{#VMID}'
+              trigger_prototypes:
+                - uuid: e1ed112879054da082fbcaeac3de5830
+                  expression: 'min(/Template Proxmox VE REST API/vm.cpuusage[{#VMID}],300)>{$CPU_USAGE_AVERAGE:"{#VMID}"}'
+                  name: 'CPU usage of VM {#VMID} over {$CPU_USAGE_AVERAGE:"{#VMID}"}% for 5 minutes'
+                  priority: AVERAGE
+                  description: |
+                    To permanently suppress the “CPU high” trigger warning on the host, set the host macro:
+                    {$CPU_USAGE_AVERAGE:"{#VMID}"}=1 Enable the “VM stopped” trigger. 
+                    {$CPU_USAGE_AVERAGE:"{#VMID}"}=0 will disable the alert for that item.
+                  dependencies:
+                    - name: 'CPU usage of VM {#VMID} over {$CPU_USAGE_HIGH:"{#VMID}"}% for 5 minutes'
+                      expression: 'min(/Template Proxmox VE REST API/vm.cpuusage[{#VMID}],300)>{$CPU_USAGE_HIGH:"{#VMID}"}'
+                - uuid: 4205c0d40f154884b9cdc12210a0d566
+                  expression: 'min(/Template Proxmox VE REST API/vm.cpuusage[{#VMID}],300)>{$CPU_USAGE_HIGH:"{#VMID}"}'
+                  name: 'CPU usage of VM {#VMID} over {$CPU_USAGE_HIGH:"{#VMID}"}% for 5 minutes'
+                  priority: HIGH
+                  description: |
+                    To permanently suppress the “CPU high” trigger warning on the host, set the host macro:
+                    {$CPU_USAGE_HIGH:"{#VMID}"}=1  Enable the “VM stopped” trigger. 
+                    {$CPU_USAGE_HIGH:"{#VMID}"}=0 will disable the alert for that item.
             - uuid: afb82acd76a840a78bd57034d0312f7f
               name: 'Machine type of {#VMID}'
               type: DEPENDENT
@@ -1570,13 +1596,13 @@ zabbix_export:
               show_triggers: 'NO'
               type: PIE
               graph_items:
-                - color: FF9800
+                - color: 0040FF
                   calc_fnc: LAST
                   item:
                     host: 'Template Proxmox VE REST API'
                     key: 'storage.avail[{#STORAGE_NAME}]'
                 - sortorder: '1'
-                  color: 0080FF
+                  color: 388E3C
                   calc_fnc: LAST
                   item:
                     host: 'Template Proxmox VE REST API'
@@ -1933,6 +1959,12 @@ zabbix_export:
               parameters:
                 - '$.body.data[*]'
       macros:
+        - macro: '{$CPU_USAGE_AVERAGE}'
+          value: '85'
+          description: 'Average CPU usage threshold (%) for warning level trigger'
+        - macro: '{$CPU_USAGE_HIGH}'
+          value: '99'
+          description: 'High CPU usage threshold (%) for warning level trigger'
         - macro: '{$ENABLE_BACKUP_ALER}'
           value: '1'
           description: 'To enable this trigger set to 1, to disable alerts on this trigger set value to 0'
