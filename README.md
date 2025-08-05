@@ -11,10 +11,18 @@ This Zabbix template enables full monitoring of a Proxmox VE environment via the
 
 ## Installation
 
-1. Download the template export (XML/YAML) or copy it from this repository.  
-2. In the Zabbix web interface, go to **Configuration → Templates → Import** and import the template.  
-3. Link the template to the desired host.  
-4. Configure host macros (see “Macros” section).
+1. Download the template `Template Proxmox VE REST API.yaml`.
+
+2. In the Zabbix web interface, go to **Configuration → Templates → Import** and import the template.
+
+3. Create a new host:
+   - Go to **Configuration → Hosts → Create host**
+   - Enter a **Host name** (e.g. `proxmox01`)
+   - Assign the template **Template Proxmox VE REST API**
+   - Set the appropriate **Group** (e.g. `Linux servers`)
+   - Leave the **Interfaces** section empty (the template uses the API, not an agent)
+
+4. Configure the required host macros (see the “Macros” section of the documentation).
 
 ## Macros
 
