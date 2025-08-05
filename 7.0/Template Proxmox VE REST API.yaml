@@ -346,118 +346,68 @@ zabbix_export:
             - type: JAVASCRIPT
               parameters:
                 - |
-                  // Zabbix JavaScript-Preprocessing für Gruppierung und Typ-Erfassung
                   try {
-                      // 1. Parse input
-                      var obj = (typeof value === 'string') ? JSON.parse(value) : value;
-                  
-                      // 2. Daten-Array ermitteln
-                      var dataArr = [];
-                      if (obj.data && Array.isArray(obj.data)) {
-                          dataArr = obj.data;
-                      } else if (obj.body && Array.isArray(obj.body.data)) {
-                          dataArr = obj.body.data;
-                      }
-                      if (dataArr.length === 0) {
-                          return JSON.stringify({ total: 0, data: [] });
+                      var obj = JSON.parse(value);
+                      if (!obj || !obj.body || !obj.body.data || !Array.isArray(obj.body.data)) {
+                          return JSON.stringify({ error: "Invalid structure" });
                       }
                   
-                      // Hilfsfunktionen für Zeitfelder
-                      function getStart(e) {
-                          return (typeof e.starttime === 'number')
-                              ? e.starttime
-                              : ((typeof e.pstart === 'number') ? e.pstart : undefined);
-                      }
-                      function getEnd(e) {
-                          return (typeof e.endtime === 'number') ? e.endtime : undefined;
-                      }
+                      var records = obj.body.data;
+                      var grouped = {};
                   
-                      // 3. Fallback für fehlende IDs
-                      dataArr.forEach(function(e) {
-                          if (e.id === undefined || e.id === null || e.id === '') {
-                              e.id = (e.type || 'unknown');
-                          }
-                      });
+                      for (var i = 0; i < records.length; i++) {
+                          var e = records[i];
+                          var id = e.id || 'unknown';
+                          var type = e.type || 'unknown';
+                          var key = id + '|' + type;
                   
-                      // 4. Ungültige Einträge ohne Startzeit herausfiltern
-                      dataArr = dataArr.filter(function(e) {
-                          return getStart(e) !== undefined;
-                      });
-                      if (dataArr.length === 0) {
-                          return JSON.stringify({ total: 0, data: [] });
-                      }
+                          var start = e.starttime || e.pstart || 0;
+                          var end = e.endtime || 0;
+                          var status = e.status || 'unknown';
                   
-                      // 5. Sortieren nach Startzeit
-                      dataArr.sort(function(a, b) {
-                          return getStart(a) - getStart(b);
-                      });
-                  
-                      // 6. Gruppieren und Metadaten sammeln (inkl. Typ des letzten Laufs)
-                      var groups = {};
-                      dataArr.forEach(function(e) {
-                          var key    = e.id;
-                          var st     = getStart(e);
-                          var et     = getEnd(e);
-                          var hasEnd = et !== undefined;
-                  
-                          if (!groups[key]) {
-                              // Initialisierung pro ID
-                              groups[key] = {
-                                  id:        key,
-                                  grpId:     key,
-                                  node:      e.node,
-                                  firstRun:  st,
-                                  lastRun:   st,
-                                  lastEnd:   hasEnd ? et : null,
-                                  lastType:  e.type
-                              };
+                          if (!grouped[key]) {
+                              // Deep copy + firstRun + grpid setzen
+                              grouped[key] = JSON.parse(JSON.stringify(e));
+                              grouped[key].firstRun = start;
+                              grouped[key].grpid = id;
                           } else {
-                              var g = groups[key];
-                              // frühester Start
-                              if (st < g.firstRun) {
-                                  g.firstRun = st;
+                              if (start < grouped[key].firstRun) {
+                                  grouped[key].firstRun = start;
                               }
-                              // spätester Start + Typ
-                              if (st > g.lastRun) {
-                                  g.lastRun  = st;
-                                  g.lastType = e.type;
-                              }
-                              // spätester Endzeitpunkt
-                              if (hasEnd && (g.lastEnd === null || et > g.lastEnd)) {
-                                  g.lastEnd = et;
+                              if (start >= grouped[key].starttime) {
+                                  // neuere Werte übernehmen
+                                  grouped[key].starttime = start;
+                                  grouped[key].endtime = end;
+                                  grouped[key].status = status;
+                                  grouped[key].type = type;
+                                  grouped[key].upid = e.upid;
+                                  grouped[key].pid = e.pid;
+                                  grouped[key].user = e.user;
+                                  grouped[key].node = e.node;
                               }
                           }
+                      }
+                  
+                      // Ergebnisliste vorbereiten
+                      var resultList = [];
+                      for (var k in grouped) {
+                          resultList.push(grouped[k]);
+                      }
+                  
+                      // Nach numerischer ID sortieren, falls möglich
+                      resultList.sort(function(a, b) {
+                          var aid = parseInt(a.id, 10);
+                          var bid = parseInt(b.id, 10);
+                          if (!isNaN(aid) && !isNaN(bid)) return aid - bid;
+                          return (a.id || '').localeCompare(b.id || '');
                       });
                   
-                      // 7. Sortierung der Gruppenschlüssel
-                      var keys = Object.keys(groups);
-                      keys.sort(function(a, b) {
-                          var na = parseInt(a, 10), nb = parseInt(b, 10);
-                          var aNum = !isNaN(na), bNum = !isNaN(nb);
-                          if (aNum && bNum)     return na - nb;
-                          if (aNum && !bNum)    return -1;
-                          if (!aNum && bNum)    return 1;
-                          return a < b ? -1 : 1;
-                      });
+                      obj.body.data = resultList;
+                      obj.body.total = resultList.length;
                   
-                      // 8. Ergebnis-Array aufbauen mit id, grpId, node, starttime, stoptime und type
-                      var resultData = keys.map(function(key) {
-                          var g = groups[key];
-                          return {
-                              id:        g.id,
-                              grpId:     g.grpId,
-                              node:      g.node,
-                              starttime: g.firstRun,
-                              stoptime:  g.lastEnd,
-                              type:      g.lastType
-                          };
-                      });
-                  
-                      // 9. JSON zurückgeben
-                      return JSON.stringify({ total: resultData.length, data: resultData });
-                  
+                      return JSON.stringify(obj);
                   } catch (err) {
-                      return JSON.stringify({ total: 0, data: [] });
+                      return JSON.stringify({ error: "Parsing failed", detail: err.message });
                   }
           timeout: 20s
           url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/tasks'
@@ -634,6 +584,15 @@ zabbix_export:
                     3. error: General execution failure; check logs for details
                     4. unknown error: Cannot classify status, please check Proxmox for details
                   manual_close: 'YES'
+          graph_prototypes:
+            - uuid: 1f9f9b88b6394562ae09774bf5190e68
+              name: 'Backup status {#ID}'
+              graph_items:
+                - color: 8E24AA
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'backup.status[{#BCKPID}]'
           master_item:
             key: pve.backup.raw
           lld_macro_paths:
@@ -895,6 +854,45 @@ zabbix_export:
                   value: CPU
                 - tag: LXC-Container
                   value: '{#VMID}'
+          graph_prototypes:
+            - uuid: 69f379a5df7a4a10aa08f507d27adb35
+              name: 'CPU usage  {#VMID}'
+              graph_items:
+                - color: FFFF00
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'lxc.cpuusage[{#VMID}]'
+            - uuid: 1879f420b8344b57829327af81fe59e6
+              name: 'Cumulative network input/output since {#VMID} start'
+              graph_items:
+                - color: 1A7C11
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'lxc.netin[{#VMID}]'
+                - sortorder: '1'
+                  color: '274482'
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'lxc.netout[{#VMID}]'
+            - uuid: 42127aaa69bb44d5b018190469cc46ca
+              name: 'LXC status {#VMID}'
+              graph_items:
+                - color: 5E35B1
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'lxc.status[{#VMID}]'
+            - uuid: a02d03993bbb446cae8abc6124d36330
+              name: 'Memory usage  {#VMID}'
+              graph_items:
+                - color: 1565C0
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'lxc.memusage[{#VMID}]'
           master_item:
             key: pve.nodes.lxc.raw
           lld_macro_paths:
@@ -1002,6 +1000,23 @@ zabbix_export:
               tags:
                 - tag: PVE
                   value: Node
+          graph_prototypes:
+            - uuid: 98596bad3f0e48b8a8dad405d1ee1ae9
+              name: 'Node status {#NODE_NAME}'
+              graph_items:
+                - color: 1A7C11
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'node.status[{#NODE_NAME}]'
+            - uuid: 4ba4071765ef4551b01cd57a588d8bff
+              name: 'Node uptime {#NODE_NAME}'
+              graph_items:
+                - color: 0040FF
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'node.uptime[{#NODE_NAME}]'
           master_item:
             key: pve.nodes.raw
           lld_macro_paths:
@@ -1310,6 +1325,45 @@ zabbix_export:
                   value: CPU
                 - tag: QEMU/KVM-VMs
                   value: '{#VMID}'
+          graph_prototypes:
+            - uuid: 466cbbbcc546410880cdc89fc18496c0
+              name: 'CPU usage {#VMID}'
+              graph_items:
+                - color: FFFF00
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'vm.cpuusage[{#VMID}]'
+            - uuid: a9fbf2a1b5554bbf81e0b11d2b5ac957
+              name: 'Cumulative network input/output, since {#VMID} start'
+              graph_items:
+                - color: 1A7C11
+                  calc_fnc: MAX
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'vm.netin[{#VMID}]'
+                - sortorder: '1'
+                  color: '274482'
+                  calc_fnc: MAX
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'vm.netout[{#VMID}]'
+            - uuid: 4a78e07a7bf04c50b779ed61e65c39d8
+              name: 'Memory usage {#VMID}'
+              graph_items:
+                - color: 1565C0
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'vm.memusage[{#VMID}]'
+            - uuid: 23fbf7d228b544d58f95ccb0cd8230f5
+              name: 'VM status {#VMID}'
+              graph_items:
+                - color: 5E35B1
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'vm.status[{#VMID}]'
           master_item:
             key: pve.nodes.qemu.raw
           lld_macro_paths:
@@ -1479,6 +1533,33 @@ zabbix_export:
               tags:
                 - tag: PVE
                   value: Storage
+          graph_prototypes:
+            - uuid: e49e5464b78446aabd4313abefda14c1
+              name: 'Storage active state {#STORAGE_NAME}'
+              graph_items:
+                - color: 00FF00
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'storage.active[{#STORAGE_NAME}]'
+            - uuid: b5e6a1f14c5b4752a18926ed9a269f9f
+              name: 'Storage size {#STORAGE_NAME}'
+              yaxismax: '0'
+              show_work_period: 'NO'
+              show_triggers: 'NO'
+              type: PIE
+              graph_items:
+                - color: FF9800
+                  calc_fnc: LAST
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'storage.avail[{#STORAGE_NAME}]'
+                - sortorder: '1'
+                  color: 0080FF
+                  calc_fnc: LAST
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'storage.size[{#STORAGE_NAME}]'
           master_item:
             key: pve.storage.raw
           lld_macro_paths:
@@ -1514,7 +1595,13 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.grpId=="{#GRPID}")].endtime'
+                    - '$.body.data[?(@.grpid=="{#GRPID}")].endtime'
+                - type: LTRIM
+                  parameters:
+                    - '["'
+                - type: RTRIM
+                  parameters:
+                    - '"]'
               master_item:
                 key: pve.tasks.raw
               tags:
@@ -1532,7 +1619,13 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.grpId=="{#GRPID}")].starttime'
+                    - '$.body.data[?(@.grpid=="{#GRPID}")].starttime'
+                - type: LTRIM
+                  parameters:
+                    - '["'
+                - type: RTRIM
+                  parameters:
+                    - '"]'
               master_item:
                 key: pve.tasks.raw
               tags:
@@ -1561,7 +1654,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.grpId=="{#GRPID}")].status'
+                    - '$.body.data[?(@.grpid=="{#GRPID}")].status'
                 - type: REGEX
                   parameters:
                     - '(?<=^\[")(?:OK|running|stopped|error|unexpected status|CT is locked \(disk\)|timeout waiting on systemd|Failed to run vncproxy\.|unable to read tail \(got 0 byte\)|interrupted by signal)(?="\]$)'
@@ -1624,18 +1717,27 @@ zabbix_export:
                   expression: 'last(/Template Proxmox VE REST API/task.status[{#GRPID}])>1 and {$ENABLE_TASK_ALER:"{#GRPID}"}=1 and {$ENABLE_TASK_STATUS_ALERT}=1'
                   name: 'Proxmox task {#TYPE} {#ID} failed'
                   opdata: 'Current task status: {ITEM.LASTVALUE}'
-                  priority: AVERAGE
+                  priority: WARNING
                   description: |
                     Use the following host macro to control the “Proxmox task failed” trigger for each task:
                     
                     {$ENABLE_TASK_STATUS_ALERT:"{#GRPID}"}=1 activates the “Proxmox task failed” trigger
                     {$ENABLE_TASK_STATUS_ALERT:"{#GRPID}"}=0 deactivates (suppresses) the “Proxmox task failed” trigger
                   manual_close: 'YES'
+          graph_prototypes:
+            - uuid: 3d3673ff518e45a2979ecfbb6aa8b5e6
+              name: 'Tast status {#TYPE} {#ID}'
+              graph_items:
+                - color: 00897B
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'task.status[{#GRPID}]'
           master_item:
             key: pve.tasks.raw
           lld_macro_paths:
             - lld_macro: '{#GRPID}'
-              path: $.grpId
+              path: $.grpid
             - lld_macro: '{#ID}'
               path: $.id
             - lld_macro: '{#TYPE}'
@@ -1643,7 +1745,7 @@ zabbix_export:
           preprocessing:
             - type: JSONPATH
               parameters:
-                - '$.data[*]'
+                - '$.body.data[*]'
         - uuid: c16a8fe279a84b10bc7f06f3ab2bca76
           name: 'Discover users'
           type: DEPENDENT
@@ -1851,6 +1953,231 @@ zabbix_export:
         - macro: '{$USER_EXPIRE_TIME}'
           value: 2d
           description: 'Number of days before a user’s account expiration at which the trigger will fire.'
+      dashboards:
+        - uuid: 1da128e63dee45edb72c71b3c66161aa
+          name: 'Proxmox VE – Monitoring Dashboard'
+          auto_start: 'NO'
+          pages:
+            - name: QEMU/KVM-VMs
+              widgets:
+                - type: graphprototype
+                  name: 'VM CPU usage'
+                  width: '72'
+                  height: '6'
+                  fields:
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Template Proxmox VE REST API'
+                        name: 'CPU usage {#VMID}'
+                    - type: STRING
+                      name: reference
+                      value: FOMZW
+                - type: graphprototype
+                  name: 'VM Memory usage'
+                  'y': '6'
+                  width: '72'
+                  height: '6'
+                  fields:
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Template Proxmox VE REST API'
+                        name: 'Memory usage {#VMID}'
+                    - type: STRING
+                      name: reference
+                      value: PFTWA
+                - type: graphprototype
+                  name: 'Cumulative network input/output, since last restart'
+                  'y': '12'
+                  width: '72'
+                  height: '6'
+                  fields:
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Template Proxmox VE REST API'
+                        name: 'Cumulative network input/output, since {#VMID} start'
+                    - type: STRING
+                      name: reference
+                      value: LUBJD
+                - type: graphprototype
+                  name: 'VM status'
+                  'y': '18'
+                  width: '72'
+                  height: '6'
+                  fields:
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Template Proxmox VE REST API'
+                        name: 'VM status {#VMID}'
+                    - type: STRING
+                      name: reference
+                      value: CTHGS
+            - name: 'LXC - Container'
+              widgets:
+                - type: graphprototype
+                  name: 'LXC CPU usage'
+                  width: '72'
+                  height: '6'
+                  fields:
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Template Proxmox VE REST API'
+                        name: 'CPU usage  {#VMID}'
+                    - type: STRING
+                      name: reference
+                      value: CCXOQ
+                - type: graphprototype
+                  name: 'LXC Memory usage'
+                  'y': '6'
+                  width: '72'
+                  height: '6'
+                  fields:
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Template Proxmox VE REST API'
+                        name: 'Memory usage  {#VMID}'
+                    - type: STRING
+                      name: reference
+                      value: GSNZQ
+                - type: graphprototype
+                  name: 'Cumulative network input/output, since last restart'
+                  'y': '12'
+                  width: '72'
+                  height: '6'
+                  fields:
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Template Proxmox VE REST API'
+                        name: 'Cumulative network input/output since {#VMID} start'
+                    - type: STRING
+                      name: reference
+                      value: CPGUH
+                - type: graphprototype
+                  name: 'LXC status'
+                  'y': '18'
+                  width: '72'
+                  height: '6'
+                  fields:
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Template Proxmox VE REST API'
+                        name: 'LXC status {#VMID}'
+                    - type: STRING
+                      name: reference
+                      value: FZSWY
+            - name: Backup
+              widgets:
+                - type: graphprototype
+                  name: 'Backup status'
+                  width: '72'
+                  height: '16'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '1'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Template Proxmox VE REST API'
+                        name: 'Backup status {#ID}'
+                    - type: STRING
+                      name: reference
+                      value: BCVLV
+                    - type: INTEGER
+                      name: rows
+                      value: '4'
+            - name: Storage
+              widgets:
+                - type: graphprototype
+                  name: 'LXC CPU usage'
+                  width: '72'
+                  height: '12'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '3'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Template Proxmox VE REST API'
+                        name: 'Storage size {#STORAGE_NAME}'
+                    - type: STRING
+                      name: reference
+                      value: QJARJ
+                    - type: INTEGER
+                      name: rows
+                      value: '2'
+                - type: graphprototype
+                  name: 'Storage active status'
+                  'y': '12'
+                  width: '72'
+                  height: '6'
+                  fields:
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Template Proxmox VE REST API'
+                        name: 'Storage active state {#STORAGE_NAME}'
+                    - type: STRING
+                      name: reference
+                      value: QNNKA
+            - name: Nodes
+              widgets:
+                - type: graphprototype
+                  name: 'Node status'
+                  width: '72'
+                  height: '6'
+                  fields:
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Template Proxmox VE REST API'
+                        name: 'Node status {#NODE_NAME}'
+                    - type: STRING
+                      name: reference
+                      value: FYIKD
+                - type: graphprototype
+                  name: 'Node uptime'
+                  'y': '6'
+                  width: '72'
+                  height: '6'
+                  fields:
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Template Proxmox VE REST API'
+                        name: 'Node uptime {#NODE_NAME}'
+                    - type: STRING
+                      name: reference
+                      value: KAUFW
+            - name: Tasks
+              widgets:
+                - type: graphprototype
+                  name: 'Task status'
+                  width: '72'
+                  height: '12'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '3'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Template Proxmox VE REST API'
+                        name: 'Tast status {#TYPE} {#ID}'
+                    - type: STRING
+                      name: reference
+                      value: FTWEP
+                    - type: INTEGER
+                      name: rows
+                      value: '2'
       valuemaps:
         - uuid: ec064a4b227f46ddbfdec0d7f2ae6572
           name: 'Backup status'
