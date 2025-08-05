@@ -82,6 +82,8 @@ This Zabbix template enables full monitoring of a Proxmox VE environment via the
 6. Enable monitoring and check initial metrics under **Monitoring → Latest data**.
 
 ### Screenshots
+<img width="3733" height="1903" alt="image" src="https://github.com/user-attachments/assets/4c35f65a-d682-4b8e-93cb-cee98c8446a4" />
+<img width="3733" height="1903" alt="image" src="https://github.com/user-attachments/assets/dbeb6500-0082-4d44-bbbc-25663de424fa" />
 <img width="2306" height="780" alt="image" src="https://github.com/user-attachments/assets/c480f488-ba91-4c7e-871a-4a10b992bb52" />
 <img width="2322" height="825" alt="image" src="https://github.com/user-attachments/assets/dd9523df-9c54-4096-a2d5-9bd3915e8a14" />
 <img width="2310" height="623" alt="image" src="https://github.com/user-attachments/assets/2f6b0a36-60c5-4e63-84dd-d09d8f011bfe" />
