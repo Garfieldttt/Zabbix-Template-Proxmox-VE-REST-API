@@ -706,9 +706,9 @@ zabbix_export:
                 - tag: LXC-Container
                   value: '{#VMID}'
             - uuid: aa2f7ca8da024df69361be1ca848fec0
-              name: 'Network input of {#VMID}'
+              name: 'Network current input of {#VMID}'
               type: DEPENDENT
-              key: 'lxc.netin[{#VMID}]'
+              key: 'lxc.netin.current[{#VMID}]'
               delay: '0'
               units: Bytes
               description: 'Cumulative host-level network input (bytes received) on Proxmox host for LXC {#VMID}, since last LXC start.'
@@ -722,6 +722,36 @@ zabbix_export:
                 - type: RTRIM
                   parameters:
                     - '"]'
+                - type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
+              master_item:
+                key: pve.nodes.lxc.raw
+              tags:
+                - tag: LXC-Container
+                  value: Network
+                - tag: LXC-Container
+                  value: '{#VMID}'
+            - uuid: 158e682159ed4261aa1769f2adb6a714
+              name: 'Network current output of {#VMID}'
+              type: DEPENDENT
+              key: 'lxc.netout.current[{#VMID}]'
+              delay: '0'
+              units: Bytes
+              description: 'Cumulative host-level network input (bytes received) on Proxmox host for LXC {#VMID}, since last LXC start.'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.data[?(@.vmid=={#VMID})].netout'
+                - type: LTRIM
+                  parameters:
+                    - '["'
+                - type: RTRIM
+                  parameters:
+                    - '"]'
+                - type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
               master_item:
                 key: pve.nodes.lxc.raw
               tags:
@@ -866,7 +896,7 @@ zabbix_export:
                   calc_fnc: ALL
                   item:
                     host: 'Template Proxmox VE REST API'
-                    key: 'lxc.netin[{#VMID}]'
+                    key: 'lxc.netin.current[{#VMID}]'
                 - sortorder: '1'
                   color: '274482'
                   calc_fnc: ALL
@@ -1231,6 +1261,33 @@ zabbix_export:
                 - tag: QEMU/KVM-VMs
                   value: '{#VMID}'
             - uuid: f213d9b4cf524e6a962a8f24f2103be6
+              name: 'Network current input of {#VMID}'
+              type: DEPENDENT
+              key: 'vm.netin.current[{#VMID}]'
+              delay: '0'
+              units: Bytes
+              description: 'Cumulative host-level network input (bytes received) on Proxmox host for VM {#VMID}, since last VM start.'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.data[?(@.vmid=={#VMID})].netin'
+                - type: LTRIM
+                  parameters:
+                    - '["'
+                - type: RTRIM
+                  parameters:
+                    - '"]'
+                - type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
+              master_item:
+                key: pve.nodes.qemu.raw
+              tags:
+                - tag: QEMU/KVM-VMs
+                  value: Network
+                - tag: QEMU/KVM-VMs
+                  value: '{#VMID}'
+            - uuid: 350a32b273344b4cb6aadd606cf122ad
               name: 'Network input of {#VMID}'
               type: DEPENDENT
               key: 'vm.netin[{#VMID}]'
@@ -1247,6 +1304,33 @@ zabbix_export:
                 - type: RTRIM
                   parameters:
                     - '"]'
+              master_item:
+                key: pve.nodes.qemu.raw
+              tags:
+                - tag: QEMU/KVM-VMs
+                  value: Network
+                - tag: QEMU/KVM-VMs
+                  value: '{#VMID}'
+            - uuid: 14fe3a64b0c74e72a80e05caf917576e
+              name: 'Network current output of {#VMID}'
+              type: DEPENDENT
+              key: 'vm.netout.current[{#VMID}]'
+              delay: '0'
+              units: Bytes
+              description: 'Cumulative host-level network input (bytes received) on Proxmox host for VM {#VMID}, since last VM start.'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.data[?(@.vmid=={#VMID})].netout'
+                - type: LTRIM
+                  parameters:
+                    - '["'
+                - type: RTRIM
+                  parameters:
+                    - '"]'
+                - type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
               master_item:
                 key: pve.nodes.qemu.raw
               tags:
@@ -1395,6 +1479,20 @@ zabbix_export:
                   item:
                     host: 'Template Proxmox VE REST API'
                     key: 'vm.netout[{#VMID}]'
+            - uuid: 9a01fe6c5b9b43c3bf5287caa9453e47
+              name: 'Current network input/output {#VMID}'
+              graph_items:
+                - color: 1A7C11
+                  calc_fnc: MAX
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'vm.netin.current[{#VMID}]'
+                - sortorder: '1'
+                  color: '274482'
+                  calc_fnc: MAX
+                  item:
+                    host: 'Template Proxmox VE REST API'
+                    key: 'vm.netout.current[{#VMID}]'
             - uuid: 4a78e07a7bf04c50b779ed61e65c39d8
               name: 'Memory usage {#VMID}'
               graph_items:
@@ -2228,6 +2326,41 @@ zabbix_export:
                     - type: STRING
                       name: reference
                       value: FTWEP
+                    - type: INTEGER
+                      name: rows
+                      value: '2'
+            - name: Network
+              widgets:
+                - type: graphprototype
+                  name: 'Network current input/output of {#VMID}'
+                  width: '72'
+                  height: '12'
+                  fields:
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Template Proxmox VE REST API'
+                        name: 'Current network input/output {#VMID}'
+                    - type: STRING
+                      name: reference
+                      value: HPWQA
+                    - type: INTEGER
+                      name: rows
+                      value: '2'
+                - type: graphprototype
+                  name: 'Network current input/output of {#VMID} since start'
+                  'y': '12'
+                  width: '72'
+                  height: '12'
+                  fields:
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Template Proxmox VE REST API'
+                        name: 'Cumulative network input/output, since {#VMID} start'
+                    - type: STRING
+                      name: reference
+                      value: SXZEY
                     - type: INTEGER
                       name: rows
                       value: '2'
