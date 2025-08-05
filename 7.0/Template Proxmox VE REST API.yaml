@@ -1022,7 +1022,7 @@ zabbix_export:
           enabled_lifetime: 2d
           item_prototypes:
             - uuid: bc762ee4ac6741bba3d7ecf96ef740c3
-              name: 'Minimum balloon memory {#VMID}'
+              name: 'Balloon minimum memory {#VMID}'
               type: DEPENDENT
               key: 'vm.baloonmin[{#VMID}]'
               delay: '0'
