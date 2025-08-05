@@ -71,4 +71,12 @@ This Zabbix template enables full monitoring of a Proxmox VE environment via the
 3. Add or select the host in Zabbix.  
 4. Assign the “Template Proxmox VE REST API” to the host.  
 5. Configure macros on the host’s Template tab (API credentials, node name, etc.).  
-6. Enable monitoring and check initial metrics under **Monitoring → Latest data**.  
+6. Enable monitoring and check initial metrics under **Monitoring → Latest data**.
+
+### Screenshots
+<img width="2306" height="780" alt="image" src="https://github.com/user-attachments/assets/c480f488-ba91-4c7e-871a-4a10b992bb52" />
+<img width="2322" height="825" alt="image" src="https://github.com/user-attachments/assets/dd9523df-9c54-4096-a2d5-9bd3915e8a14" />
+<img width="2310" height="623" alt="image" src="https://github.com/user-attachments/assets/2f6b0a36-60c5-4e63-84dd-d09d8f011bfe" />
+
+
+
