@@ -339,7 +339,7 @@ zabbix_export:
           name: 'PVE tasks raw'
           type: HTTP_AGENT
           key: pve.tasks.raw
-          history: '0'
+          history: 1d
           value_type: TEXT
           trends: '0'
           preprocessing:
@@ -348,7 +348,7 @@ zabbix_export:
                 - |
                   try {
                       var obj = JSON.parse(value);
-                      if (!obj || !obj.body || !obj.body.data || !Array.isArray(obj.body.data)) {
+                      if (!obj || !obj.body || !Array.isArray(obj.body.data)) {
                           return JSON.stringify({ error: "Invalid structure" });
                       }
                   
@@ -357,44 +357,31 @@ zabbix_export:
                   
                       for (var i = 0; i < records.length; i++) {
                           var e = records[i];
-                          var id = e.id || 'unknown';
-                          var type = e.type || 'unknown';
+                          if (!e || !e.id || !e.type) continue;
+                  
+                          var id = e.id;
+                          var type = e.type;
                           var key = id + '|' + type;
                   
                           var start = e.starttime || e.pstart || 0;
-                          var end = e.endtime || 0;
-                          var status = e.status || 'unknown';
                   
-                          if (!grouped[key]) {
-                              // Deep copy + firstRun + grpid setzen
-                              grouped[key] = JSON.parse(JSON.stringify(e));
-                              grouped[key].firstRun = start;
-                              grouped[key].grpid = id;
-                          } else {
-                              if (start < grouped[key].firstRun) {
-                                  grouped[key].firstRun = start;
+                          // Wenn kein Eintrag vorhanden oder dieser neuer ist: ersetzen
+                          if (!grouped[key] || start > (grouped[key].starttime || grouped[key].pstart || 0)) {
+                              var copy = {};
+                              for (var k in e) {
+                                  copy[k] = e[k];
                               }
-                              if (start >= grouped[key].starttime) {
-                                  // neuere Werte übernehmen
-                                  grouped[key].starttime = start;
-                                  grouped[key].endtime = end;
-                                  grouped[key].status = status;
-                                  grouped[key].type = type;
-                                  grouped[key].upid = e.upid;
-                                  grouped[key].pid = e.pid;
-                                  grouped[key].user = e.user;
-                                  grouped[key].node = e.node;
-                              }
+                              copy.grpid = id;
+                              grouped[key] = copy;
                           }
                       }
                   
-                      // Ergebnisliste vorbereiten
                       var resultList = [];
                       for (var k in grouped) {
                           resultList.push(grouped[k]);
                       }
                   
-                      // Nach numerischer ID sortieren, falls möglich
+                      // Nach numerischer ID sortieren (falls möglich)
                       resultList.sort(function(a, b) {
                           var aid = parseInt(a.id, 10);
                           var bid = parseInt(b.id, 10);
@@ -1586,7 +1573,7 @@ zabbix_export:
             - uuid: be929b6a65ab46109a509d6f96b2348b
               name: 'Task endtime {#TYPE} {#ID}'
               type: DEPENDENT
-              key: 'task.endtime[{#GRPID}]'
+              key: 'task.endtime[{#GRPID},{#TYPE}]'
               delay: '0'
               trends: '0'
               units: unixtime
@@ -1595,7 +1582,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.body.data[?(@.grpid=="{#GRPID}")].endtime'
+                    - '$.body.data[?(@.grpid=="{#GRPID}" && @.type=="{#TYPE}")].endtime'
                 - type: LTRIM
                   parameters:
                     - '["'
@@ -1610,7 +1597,7 @@ zabbix_export:
             - uuid: 1b938d0bb1b542e281b2d554d24225b4
               name: 'Task starttime {#TYPE} {#ID}'
               type: DEPENDENT
-              key: 'task.starttime[{#GRPID}]'
+              key: 'task.starttime[{#GRPID},{#TYPE}]'
               delay: '0'
               trends: '0'
               units: unixtime
@@ -1619,7 +1606,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.body.data[?(@.grpid=="{#GRPID}")].starttime'
+                    - '$.body.data[?(@.grpid=="{#GRPID}" && @.type=="{#TYPE}")].starttime'
                 - type: LTRIM
                   parameters:
                     - '["'
@@ -1634,7 +1621,7 @@ zabbix_export:
             - uuid: 07fbf01babe4452487bcc8fa7de63d1e
               name: 'Task Status: {#TYPE} {#ID}'
               type: DEPENDENT
-              key: 'task.status[{#GRPID}]'
+              key: 'task.status[{#GRPID},{#TYPE}]'
               delay: '0'
               trends: '0'
               description: |
@@ -1714,7 +1701,7 @@ zabbix_export:
                   value: Tasks
               trigger_prototypes:
                 - uuid: 19e5d067d25941169192a9ff6461b787
-                  expression: 'last(/Template Proxmox VE REST API/task.status[{#GRPID}])>1 and {$ENABLE_TASK_ALER:"{#GRPID}"}=1 and {$ENABLE_TASK_STATUS_ALERT}=1'
+                  expression: 'last(/Template Proxmox VE REST API/task.status[{#GRPID},{#TYPE}])>1 and {$ENABLE_TASK_ALER:"{#GRPID}"}=1 and {$ENABLE_TASK_STATUS_ALERT}=1'
                   name: 'Proxmox task {#TYPE} {#ID} failed'
                   opdata: 'Current task status: {ITEM.LASTVALUE}'
                   priority: WARNING
@@ -1732,7 +1719,7 @@ zabbix_export:
                   calc_fnc: ALL
                   item:
                     host: 'Template Proxmox VE REST API'
-                    key: 'task.status[{#GRPID}]'
+                    key: 'task.status[{#GRPID},{#TYPE}]'
           master_item:
             key: pve.tasks.raw
           lld_macro_paths:
