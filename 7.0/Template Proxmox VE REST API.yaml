@@ -617,6 +617,9 @@ zabbix_export:
                 - type: RTRIM
                   parameters:
                     - '"]'
+                - type: MULTIPLIER
+                  parameters:
+                    - '100'
               master_item:
                 key: pve.nodes.lxc.raw
               tags:
@@ -1095,6 +1098,9 @@ zabbix_export:
                 - type: RTRIM
                   parameters:
                     - '"]'
+                - type: MULTIPLIER
+                  parameters:
+                    - '100'
               master_item:
                 key: pve.nodes.qemu.raw
               tags:
