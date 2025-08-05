@@ -2083,7 +2083,7 @@ zabbix_export:
             - name: Storage
               widgets:
                 - type: graphprototype
-                  name: 'LXC CPU usage'
+                  name: 'Storage utilization'
                   width: '72'
                   height: '12'
                   fields:
