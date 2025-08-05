@@ -1034,6 +1034,36 @@ zabbix_export:
                 - type: JSONPATH
                   parameters:
                     - '$.data[?(@.vmid=={#VMID})].balloon_min'
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: '0'
+                - type: LTRIM
+                  parameters:
+                    - '["'
+                - type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: pve.nodes.qemu.raw
+              tags:
+                - tag: QEMU/KVM-VMs
+                  value: Memory
+                - tag: QEMU/KVM-VMs
+                  value: '{#VMID}'
+            - uuid: d828297876d94d078596f76f0da43c38
+              name: 'Balloon memory {#VMID}'
+              type: DEPENDENT
+              key: 'vm.baloon[{#VMID}]'
+              delay: '0'
+              units: Bytes
+              description: |
+                Balloon size on Proxmox host for VM {#VMID}
+                Note: The balloon size can only be determined when the VM is running.
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.data[?(@.vmid=={#VMID})].balloon'
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: '0'
                 - type: LTRIM
                   parameters:
                     - '["'
@@ -1166,8 +1196,6 @@ zabbix_export:
               master_item:
                 key: pve.nodes.qemu.raw
               tags:
-                - tag: QEMU/KVM-VMs
-                  value: Uptime
                 - tag: QEMU/KVM-VMs
                   value: '{#VMID}'
             - uuid: f213d9b4cf524e6a962a8f24f2103be6
