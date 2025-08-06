@@ -2189,13 +2189,13 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.body.data[?(@.grpid=="{#GRPID}")].status'
+                    - '$.body.data[?(@.grpid=="{#GRPID}" && @.type=="{#TYPE}")].status'
                   error_handler: DISCARD_VALUE
                 - type: REGEX
                   parameters:
-                    - '(?<=^\[")(?:OK|running|stopped|error|unexpected status|CT is locked \(disk\)|timeout waiting on systemd|Failed to run vncproxy\.|unable to read tail \(got 0 byte\)|interrupted by signal)(?="\]$)'
+                    - '^\["(?:OK|running|stopped|error|unexpected status|CT is locked \(disk\)|timeout waiting on systemd|Failed to run vncproxy\.|unable to read tail \(got 0 byte\)|interrupted by signal)"\]$'
                     - \0
-                  error_handler: CUSTOM_VALUE
+                  error_handler: CUSTOM_ERROR
                   error_handler_params: '10'
                 - type: LTRIM
                   parameters:
