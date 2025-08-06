@@ -28,7 +28,6 @@ This Zabbix template enables full monitoring of a Proxmox VE environment via the
      - **Path:** `/`  
      - **User:** `zabbix@pam`  
      - **Role:** `PVEAuditor`  
-     - **Propagate:**  
    - Click **Add**.
 
 ---
