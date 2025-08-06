@@ -39,7 +39,6 @@ This Zabbix template enables full monitoring of a Proxmox VE environment via the
    - Go to **Datacenter → API Tokens** → **Add**  
      - **User:** `zabbix@pam`  
      - **Token ID:** `Zabbix`  
-     - **Privilege Separation:** 
    - Click **Add** and note the **Token Secret**.
 
 2. **Grant token-specific permission**  
