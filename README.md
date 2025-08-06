@@ -82,11 +82,11 @@ This Zabbix template enables full monitoring of a Proxmox VE environment via the
 6. Enable monitoring and check initial metrics under **Monitoring → Latest data**.
 
 ### Screenshots
-<img width="3733" height="1903" alt="image" src="https://github.com/user-attachments/assets/4c35f65a-d682-4b8e-93cb-cee98c8446a4" />
-<img width="3733" height="1903" alt="image" src="https://github.com/user-attachments/assets/dbeb6500-0082-4d44-bbbc-25663de424fa" />
-<img width="2306" height="780" alt="image" src="https://github.com/user-attachments/assets/c480f488-ba91-4c7e-871a-4a10b992bb52" />
-<img width="2322" height="825" alt="image" src="https://github.com/user-attachments/assets/dd9523df-9c54-4096-a2d5-9bd3915e8a14" />
-<img width="2310" height="623" alt="image" src="https://github.com/user-attachments/assets/2f6b0a36-60c5-4e63-84dd-d09d8f011bfe" />
+<img width="2321" height="1147" alt="image" src="https://github.com/user-attachments/assets/d41f3f60-8220-4326-a2c2-6f28f1ffae57" />
+<img width="2321" height="1147" alt="image" src="https://github.com/user-attachments/assets/9d4975cd-bf00-4f17-a92f-a67c3d66f162" />
+<img width="2321" height="1147" alt="image" src="https://github.com/user-attachments/assets/0b1d7b96-e4a2-4b65-9879-0bf9dc69270b" />
+<img width="2321" height="1147" alt="image" src="https://github.com/user-attachments/assets/d95a382b-00eb-439c-9250-7e0b340ec453" />
+<img width="2321" height="1147" alt="image" src="https://github.com/user-attachments/assets/48d17e9c-71ae-4e27-8fbe-eb64c666a917" />
 
 
 
