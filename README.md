@@ -1,6 +1,8 @@
 # Zabbix Template Proxmox VE REST API
 
-This Zabbix template enables full monitoring of a Proxmox VE environment via the official REST API (Proxmox VE ≥ 7.0). It collects host and container metrics, backup jobs, storage status, tasks, and user information, and automatically generates discovery rules for nodes, LXC containers, QEMU VMs, storage pools, running tasks, and API users.
+This Zabbix template enables full monitoring of a Proxmox VE environment via the official REST API (Proxmox VE > 7.0). It collects host and container metrics, backup jobs, storage status, tasks, and user information, and automatically generates discovery rules for nodes, LXC containers, QEMU VMs, storage pools, running tasks, and API users.
+
+---
 
 ## Requirements
 
@@ -11,17 +13,14 @@ This Zabbix template enables full monitoring of a Proxmox VE environment via the
 
 ## Installation
 
-1. Download the template `Template Proxmox VE REST API.yaml`.
-
-2. In the Zabbix web interface, go to **Configuration → Templates → Import** and import the template.
-
-3. Create a new host:
-   - Go to **Configuration → Hosts → Create host**
-   - Enter a **Host name** (e.g. `proxmox01`)
-   - Assign the template **Template Proxmox VE REST API**
-   - Set the appropriate **Group** (e.g. `Linux servers`)
-   - Leave the **Interfaces** section empty (the template uses the API, not an agent)
-
+1. Download the template `Template Proxmox VE REST API.yaml`.  
+2. In the Zabbix web interface, go to **Configuration → Templates → Import** and import the template.  
+3. Create a new host:  
+   - Go to **Configuration → Hosts → Create host**  
+   - Enter a **Host name** (e.g. `proxmox01`)  
+   - Assign the template **Template Proxmox VE REST API**  
+   - Set the appropriate **Group** (e.g. `Linux servers`)  
+   - Leave the **Interfaces** section empty (the template uses the API, not an agent)  
 4. Configure the required host macros (see the “Macros” section of the documentation).
 
 ## Macros
@@ -30,7 +29,7 @@ This Zabbix template enables full monitoring of a Proxmox VE environment via the
 
 | Macro                   | Example Value      | Description                                          |
 |-------------------------|--------------------|------------------------------------------------------|
-| `{$PVE_IP}`             | `192.168.1.1`   | IP address or hostname of the Proxmox VE API server  |
+| `{$PVE_IP}`             | `192.168.1.1`      | IP address or hostname of the Proxmox VE API server  |
 | `{$PVE_PORT}`           | `8006`             | TCP port of the Proxmox API (default: 8006)          |
 | `{$PVE_NODE}`           | `pve`              | Identifier of the Proxmox node                       |
 | `{$PVE_API_USER}`       | `root@pam`         | API username including realm                         |
@@ -75,18 +74,16 @@ This Zabbix template enables full monitoring of a Proxmox VE environment via the
 
 ## Usage
 
-1. Create an API token on the Proxmox host.
-3. Add or select the host in Zabbix.  
-4. Assign the “Template Proxmox VE REST API” to the host.  
-5. Configure macros on the host’s Template tab (API credentials, node name, etc.).  
-6. Enable monitoring and check initial metrics under **Monitoring → Latest data**.
+1. Create an API token on the Proxmox host.  
+2. Add or select the host in Zabbix.  
+3. Assign the “Template Proxmox VE REST API” to the host.  
+4. Configure macros on the host’s Template tab (API credentials, node name, etc.).  
+5. Enable monitoring and check initial metrics under **Monitoring → Latest data**.
 
 ### Screenshots
-<img width="2321" height="1147" alt="image" src="https://github.com/user-attachments/assets/d41f3f60-8220-4326-a2c2-6f28f1ffae57" />
-<img width="2321" height="1147" alt="image" src="https://github.com/user-attachments/assets/9d4975cd-bf00-4f17-a92f-a67c3d66f162" />
-<img width="2321" height="1147" alt="image" src="https://github.com/user-attachments/assets/0b1d7b96-e4a2-4b65-9879-0bf9dc69270b" />
-<img width="2321" height="1147" alt="image" src="https://github.com/user-attachments/assets/d95a382b-00eb-439c-9250-7e0b340ec453" />
+
+<img width="2321" height="1147" alt="image" src="https://github.com/user-attachments/assets/d41f3f60-8220-4326-a2c2-6f28f1ffae57" />  
+<img width="2321" height="1147" alt="image" src="https://github.com/user-attachments/assets/9d4975cd-bf00-4f17-a92f-a67c3d66f162" />  
+<img width="2321" height="1147" alt="image" src="https://github.com/user-attachments/assets/0b1d7b96-e4a2-4b65-9879-0bf9dc69270b" />  
+<img width="2321" height="1147" alt="image" src="https://github.com/user-attachments/assets/d95a382b-00eb-439c-9250-7e0b340ec453" />  
 <img width="2321" height="1147" alt="image" src="https://github.com/user-attachments/assets/48d17e9c-71ae-4e27-8fbe-eb64c666a917" />
-
-
-
