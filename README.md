@@ -10,6 +10,46 @@ This Zabbix template enables full monitoring of a Proxmox VE environment via the
 - **HTTP Agent** module enabled on the Zabbix server  
 - Proxmox VE API token with read permissions for Nodes, Tasks, Storage, LXC, QEMU, and Access  
 - Host macros defined on the Zabbix host object (see “Macros” section)
+  
+## 1. Create the Zabbix API User
+
+1. **Log in**  
+   - Open the Proxmox web interface.
+
+2. **Create the user**  
+   - Navigate to **Datacenter → Permissions → Users** → **Add**  
+   - **User name:** `zabbix@pam`  
+   - **Password:** (choose a strong password)  
+   - **Email:** (optional)  
+   - Click **Add**.
+
+3. **Assign read-only role**  
+   - Under **Datacenter → Permissions**, click **Add → User Permission**  
+     - **Path:** `/`  
+     - **User:** `zabbix@pam`  
+     - **Role:** `PVEAuditor`  
+     - **Propagate:**  
+   - Click **Add**.
+
+---
+
+## 2. Create the API Token with Privilege Separation
+
+1. **Generate the token**  
+   - Go to **Datacenter → API Tokens** → **Add**  
+     - **User:** `zabbix@pam`  
+     - **Token ID:** `zabbixtoken`  
+     - **Privilege Separation:** 
+   - Click **Add** and note the **Token Secret**.
+
+2. **Grant token-specific permission**  
+   - Go to **Datacenter → Permissions** → **Add**  
+     - **Type:** **API Token**  
+     - **Path:** `/`
+     - **User/Group/API Token:** `Zabbix@pam!zabbixtoken`  
+     - **Role:** `PVEAuditor`
+     - **Propagate:**  
+   - Click **Add**.
 
 ## Installation
 
