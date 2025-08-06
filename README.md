@@ -61,6 +61,14 @@ This Zabbix template enables full monitoring of a Proxmox VE environment via the
    - Leave the **Interfaces** section empty (the template uses the API, not an agent)  
 4. Configure the required host macros (see the “Macros” section of the documentation).
 
+## Usage
+
+1. Create an API token on the Proxmox host.  
+2. Add or select the host in Zabbix.  
+3. Assign the “Template Proxmox VE REST API” to the host.  
+4. Configure macros on the host’s Template tab (API credentials, node name, etc.).  
+5. Enable monitoring and check initial metrics under **Monitoring → Latest data**.
+
 ## Macros
 
 ### Required Macros
@@ -109,14 +117,6 @@ This Zabbix template enables full monitoring of a Proxmox VE environment via the
 - Task failure  
 - VM/LXC stopped  
 - User expiration (warning at configured lead time)
-
-## Usage
-
-1. Create an API token on the Proxmox host.  
-2. Add or select the host in Zabbix.  
-3. Assign the “Template Proxmox VE REST API” to the host.  
-4. Configure macros on the host’s Template tab (API credentials, node name, etc.).  
-5. Enable monitoring and check initial metrics under **Monitoring → Latest data**.
 
 ### Screenshots
 
