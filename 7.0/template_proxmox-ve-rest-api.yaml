@@ -136,27 +136,25 @@ zabbix_export:
           output_format: JSON
         - uuid: 8dc9614f15df4bd2914b15a03731dc02
           name: 'PVE CPU cores'
-          type: HTTP_AGENT
+          type: DEPENDENT
           key: pve.cores
+          delay: '0'
           trends: '0'
           units: '!Cores'
           preprocessing:
             - type: JSONPATH
               parameters:
                 - $.data.cpuinfo.cores
-          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/status'
-          headers:
-            - name: Authorization
-              value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-            - name: Accept
-              value: application/json
+          master_item:
+            key: pve.status
           tags:
             - tag: PVE
               value: CPU
         - uuid: 6a0405792aa8410c8c87b82f66659827
           name: 'PVE CPU utilization'
-          type: HTTP_AGENT
+          type: DEPENDENT
           key: pve.cpu.utilization
+          delay: '0'
           value_type: FLOAT
           trends: '0'
           units: '%'
@@ -167,53 +165,59 @@ zabbix_export:
             - type: MULTIPLIER
               parameters:
                 - '100'
-          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/status'
-          headers:
-            - name: Authorization
-              value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-            - name: Accept
-              value: application/json
+          master_item:
+            key: pve.status
           tags:
             - tag: PVE
               value: CPU
         - uuid: 8d7c1e46d5444b06ad419ffab9415d44
           name: 'PVE CPU info'
-          type: HTTP_AGENT
+          type: DEPENDENT
           key: pve.cpuinfo
+          delay: '0'
           value_type: CHAR
           trends: '0'
           preprocessing:
             - type: JSONPATH
               parameters:
                 - $.data.cpuinfo.model
-          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/status'
-          headers:
-            - name: Authorization
-              value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-            - name: Accept
-              value: application/json
+          master_item:
+            key: pve.status
           tags:
             - tag: PVE
               value: CPU
         - uuid: aff51cdfad424764ab637ceec7b54ff3
           name: 'PVE CPU threads'
-          type: HTTP_AGENT
+          type: DEPENDENT
           key: pve.cpus
+          delay: '0'
           trends: '0'
           units: '!Threads'
           preprocessing:
             - type: JSONPATH
               parameters:
                 - $.data.cpuinfo.cpus
-          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/status'
-          headers:
-            - name: Authorization
-              value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-            - name: Accept
-              value: application/json
+          master_item:
+            key: pve.status
           tags:
             - tag: PVE
               value: CPU
+        - uuid: bfca65a711d34b0d9543249fe9174097
+          name: 'PVE current kernel'
+          type: DEPENDENT
+          key: pve.current.kernel
+          delay: '0'
+          value_type: CHAR
+          trends: '0'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.data["current-kernel"].release'
+          master_item:
+            key: pve.status
+          tags:
+            - tag: PVE
+              value: Kernel
         - uuid: b8f220b1fc734381a51d0561efa13bef
           name: 'PVE disks raw'
           type: HTTP_AGENT
@@ -298,86 +302,139 @@ zabbix_export:
               value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
             - name: Accept
               value: application/json
+        - uuid: ee746cfba83e43e0af3053d86bcb2c9c
+          name: 'PVE load average (15 min)'
+          type: DEPENDENT
+          key: pve.loadaverage.fifteen
+          delay: '0'
+          value_type: FLOAT
+          trends: '0'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.data.loadavg[2]'
+          master_item:
+            key: pve.status
+          tags:
+            - tag: PVE
+              value: CPU
+        - uuid: b0e142359bce47d288156cac52b3cda0
+          name: 'PVE load average (5 min)'
+          type: DEPENDENT
+          key: pve.loadaverage.fiveminute
+          delay: '0'
+          value_type: FLOAT
+          trends: '0'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.data.loadavg[1]'
+          master_item:
+            key: pve.status
+          tags:
+            - tag: PVE
+              value: CPU
+        - uuid: e30e7acbdeb144f1a9b2ef6147df229b
+          name: 'PVE load average (1 min)'
+          type: DEPENDENT
+          key: pve.loadaverage.oneminute
+          delay: '0'
+          value_type: FLOAT
+          trends: '0'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.data.loadavg[0]'
+          master_item:
+            key: pve.status
+          tags:
+            - tag: PVE
+              value: CPU
         - uuid: 86a2555f26f04ef99e267d5045947de1
           name: 'PVE localtime'
-          type: HTTP_AGENT
+          type: DEPENDENT
           key: pve.localtime
+          delay: '0'
           trends: '0'
           units: unixtime
           preprocessing:
             - type: JSONPATH
               parameters:
                 - $.data.time
-          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/time'
-          headers:
-            - name: Authorization
-              value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-            - name: Accept
-              value: application/json
+          master_item:
+            key: pve.status
           tags:
             - tag: PVE
               value: Localtime
+        - uuid: 05dec93dcbcc4c4c8db9642f51016ee0
+          name: 'PVE machine type'
+          type: DEPENDENT
+          key: pve.machine.type
+          delay: '0'
+          value_type: CHAR
+          trends: '0'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.data["current-kernel"].machine'
+          master_item:
+            key: pve.status
+          tags:
+            - tag: PVE
+              value: Kernel
         - uuid: 7a0e1ff3f96c4695a2642bf3aa80e092
           name: 'PVE memory available'
-          type: HTTP_AGENT
+          type: DEPENDENT
           key: pve.memory.free
+          delay: '0'
           trends: '0'
           units: Bytes
           preprocessing:
             - type: JSONPATH
               parameters:
                 - $.data.memory.free
-          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/status'
-          headers:
-            - name: Authorization
-              value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-            - name: Accept
-              value: application/json
+          master_item:
+            key: pve.status
           tags:
             - tag: PVE
               value: Memory
         - uuid: e61c53e9214544d5ba50d64223564aad
           name: 'PVE memory total'
-          type: HTTP_AGENT
+          type: DEPENDENT
           key: pve.memory.total
+          delay: '0'
           trends: '0'
           units: Bytes
           preprocessing:
             - type: JSONPATH
               parameters:
                 - $.data.memory.total
-          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/status'
-          headers:
-            - name: Authorization
-              value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-            - name: Accept
-              value: application/json
+          master_item:
+            key: pve.status
           tags:
             - tag: PVE
               value: Memory
         - uuid: ab8adc650a764a7f81847578f9360f63
           name: 'PVE memory used'
-          type: HTTP_AGENT
+          type: DEPENDENT
           key: pve.memory.used
+          delay: '0'
           trends: '0'
           units: Bytes
           preprocessing:
             - type: JSONPATH
               parameters:
                 - $.data.memory.used
-          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/status'
-          headers:
-            - name: Authorization
-              value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-            - name: Accept
-              value: application/json
+          master_item:
+            key: pve.status
           tags:
             - tag: PVE
               value: Memory
         - uuid: ce497662bfd34c9da21c071e7b9b95ce
           name: 'PVE CPU MHz'
-          type: HTTP_AGENT
+          type: DEPENDENT
           key: pve.mhz
+          delay: '0'
           value_type: FLOAT
           trends: '0'
           units: '!MHz'
@@ -385,12 +442,8 @@ zabbix_export:
             - type: JSONPATH
               parameters:
                 - $.data.cpuinfo.mhz
-          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/status'
-          headers:
-            - name: Authorization
-              value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-            - name: Accept
-              value: application/json
+          master_item:
+            key: pve.status
           tags:
             - tag: PVE
               value: CPU
@@ -436,61 +489,81 @@ zabbix_export:
               value: application/json
         - uuid: 8ffa4568f4d4410dad143171f541d544
           name: 'Disk rootfs avail'
-          type: HTTP_AGENT
+          type: DEPENDENT
           key: pve.rootfs.avail
+          delay: '0'
           trends: '0'
           units: Bytes
           preprocessing:
             - type: JSONPATH
               parameters:
                 - $.data.rootfs.avail
-          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/status'
-          headers:
-            - name: Authorization
-              value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-            - name: Accept
-              value: application/json
+          master_item:
+            key: pve.status
           tags:
             - tag: PVE
               value: Disk
         - uuid: a3091fd210f446c68cef528c2151b2be
           name: 'Disk rootfs size'
-          type: HTTP_AGENT
+          type: DEPENDENT
           key: pve.rootfs.size
+          delay: '0'
           trends: '0'
           units: Bytes
           preprocessing:
             - type: JSONPATH
               parameters:
                 - $.data.rootfs.total
-          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/status'
-          headers:
-            - name: Authorization
-              value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-            - name: Accept
-              value: application/json
+          master_item:
+            key: pve.status
           tags:
             - tag: PVE
               value: Disk
         - uuid: e9857891ed7b4259b5accd82e4ef59d9
           name: 'Disk rootfs used'
-          type: HTTP_AGENT
+          type: DEPENDENT
           key: pve.rootfs.used
+          delay: '0'
           trends: '0'
           units: Bytes
           preprocessing:
             - type: JSONPATH
               parameters:
                 - $.data.rootfs.used
+          master_item:
+            key: pve.status
+          tags:
+            - tag: PVE
+              value: Disk
+        - uuid: 6e6cfbb1bd554a6c94e3c712a4387900
+          name: 'PVE CPU sockets'
+          type: DEPENDENT
+          key: pve.sockets
+          delay: '0'
+          trends: '0'
+          units: '!Sockets'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.data.cpuinfo.sockets
+          master_item:
+            key: pve.status
+          tags:
+            - tag: PVE
+              value: CPU
+        - uuid: 894e2a471b4e441e9cf76143b1961e21
+          name: 'PVE status raw'
+          type: HTTP_AGENT
+          key: pve.status
+          history: 1d
+          value_type: TEXT
+          trends: '0'
           url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/status'
           headers:
             - name: Authorization
               value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
             - name: Accept
               value: application/json
-          tags:
-            - tag: PVE
-              value: Disk
         - uuid: e7ccf26004ff4d73b849ec2f0ba9f3a5
           name: 'PVE storage raw'
           type: HTTP_AGENT
@@ -505,6 +578,40 @@ zabbix_export:
               value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
             - name: Accept
               value: application/json
+        - uuid: fc7f8aba309848fe818a194eae131210
+          name: 'PVE boot mode'
+          type: DEPENDENT
+          key: pve.system.boot.mode
+          delay: '0'
+          value_type: CHAR
+          trends: '0'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.data["boot-info"].mode'
+          master_item:
+            key: pve.status
+          tags:
+            - tag: PVE
+              value: Boot
+        - uuid: 6d8d3b4ace0349838ddb4681d733df82
+          name: 'PVE secureboot'
+          type: DEPENDENT
+          key: pve.system.boot.secureboot
+          delay: '0'
+          value_type: CHAR
+          trends: '0'
+          valuemap:
+            name: 'PVE secureboot'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.data["boot-info"].secureboot'
+          master_item:
+            key: pve.status
+          tags:
+            - tag: PVE
+              value: Boot
         - uuid: 8cbc645bf73d4654afa40ff9245ac67c
           name: 'PVE tasks raw'
           type: HTTP_AGENT
@@ -576,39 +683,33 @@ zabbix_export:
           output_format: JSON
         - uuid: 6b6b792bf6cd4440acd22a5701f84201
           name: 'PVE timezone'
-          type: HTTP_AGENT
+          type: DEPENDENT
           key: pve.timezone
+          delay: '0'
           value_type: CHAR
           trends: '0'
           preprocessing:
             - type: JSONPATH
               parameters:
                 - $.data.timezone
-          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/time'
-          headers:
-            - name: Authorization
-              value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-            - name: Accept
-              value: application/json
+          master_item:
+            key: pve.status
           tags:
             - tag: PVE
               value: Timezone
         - uuid: 65168f3bf85e4d4d9c4e56b56a66ca43
           name: 'PVE uptime'
-          type: HTTP_AGENT
+          type: DEPENDENT
           key: pve.uptime
+          delay: '0'
           trends: '0'
           units: s
           preprocessing:
             - type: JSONPATH
               parameters:
                 - $.data.uptime
-          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/status'
-          headers:
-            - name: Authorization
-              value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-            - name: Accept
-              value: application/json
+          master_item:
+            key: pve.status
           tags:
             - tag: PVE
               value: Uptime
@@ -704,12 +805,6 @@ zabbix_export:
               type: DEPENDENT
               key: 'backup.status[{#BCKPID}]'
               delay: '0'
-              description: |
-                0. OK: All clear, no errors detected
-                1. running: VM/CT is currently active
-                2. stopped: VM/CT has been shut down
-                3. error: General execution failure; check logs for details
-                4. unknown error: Cannot classify status, please check Proxmox for details
               valuemap:
                 name: 'Tasks status'
               preprocessing:
@@ -1215,7 +1310,7 @@ zabbix_export:
               yaxismax: '0'
               show_work_period: 'NO'
               show_triggers: 'NO'
-              type: PIE
+              type: EXPLODED
               graph_items:
                 - color: 388E3C
                   calc_fnc: MIN
@@ -2080,7 +2175,7 @@ zabbix_export:
               yaxismax: '0'
               show_work_period: 'NO'
               show_triggers: 'NO'
-              type: PIE
+              type: EXPLODED
               graph_items:
                 - color: 0040FF
                   calc_fnc: LAST
@@ -2523,22 +2618,33 @@ zabbix_export:
                     - type: STRING
                       name: reference
                       value: KQFTA
-                - type: graph
+                - type: piechart
+                  name: 'Load average'
                   'y': '8'
-                  width: '72'
+                  width: '36'
                   height: '6'
                   fields:
-                    - type: ITEM
-                      name: itemid.0
-                      value:
-                        host: 'Template Proxmox VE REST API'
-                        key: pve.cpu.utilization
                     - type: STRING
-                      name: reference
-                      value: LGNFK
+                      name: ds.0.color
+                      value: 00897B
+                    - type: STRING
+                      name: ds.0.items.0
+                      value: 'PVE Load Average (1 min)'
+                    - type: STRING
+                      name: ds.1.color
+                      value: 0040FF
+                    - type: STRING
+                      name: ds.1.items.0
+                      value: 'PVE Load Average (5 min)'
+                    - type: STRING
+                      name: ds.2.color
+                      value: 8E24AA
+                    - type: STRING
+                      name: ds.2.items.0
+                      value: 'PVE Load Average (15 min)'
                     - type: INTEGER
-                      name: source_type
-                      value: '1'
+                      name: space
+                      value: '3'
                 - type: item
                   x: '36'
                   width: '36'
@@ -2551,6 +2657,23 @@ zabbix_export:
                 - type: graph
                   x: '36'
                   'y': '2'
+                  width: '36'
+                  height: '6'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Template Proxmox VE REST API'
+                        key: pve.cpu.utilization
+                    - type: STRING
+                      name: reference
+                      value: AHCZQ
+                    - type: INTEGER
+                      name: source_type
+                      value: '1'
+                - type: graph
+                  x: '36'
+                  'y': '8'
                   width: '36'
                   height: '6'
                   fields:
@@ -2920,6 +3043,13 @@ zabbix_export:
               newvalue: offline
             - value: '1'
               newvalue: online
+        - uuid: 0c2c3eccf2504239a1bb1d01c84aa41f
+          name: 'PVE secureboot'
+          mappings:
+            - value: '0'
+              newvalue: disabled
+            - value: '1'
+              newvalue: enabled
         - uuid: a0392eedd7b0402aa6f2b57585b32407
           name: 'Storage active status'
           mappings:
@@ -2975,7 +3105,34 @@ zabbix_export:
               newvalue: running
             - value: '2'
               newvalue: paused
+  triggers:
+    - uuid: bdaeac3c76ec44ef96bf78ca83ba0dad
+      expression: 'min(/Template Proxmox VE REST API/pve.loadaverage.oneminute,900) >= last(/Template Proxmox VE REST API/pve.cpus)'
+      name: 'High CPU average'
+      opdata: 'Current cpu average: {ITEM.LASTVALUE1}'
+      priority: AVERAGE
   graphs:
+    - uuid: bbdef5c2775146b4ad30ac91ad877624
+      name: 'Load average'
+      type: STACKED
+      graph_items:
+        - color: 1A7C11
+          calc_fnc: MIN
+          item:
+            host: 'Template Proxmox VE REST API'
+            key: pve.loadaverage.oneminute
+        - sortorder: '1'
+          color: '274482'
+          calc_fnc: MIN
+          item:
+            host: 'Template Proxmox VE REST API'
+            key: pve.loadaverage.fiveminute
+        - sortorder: '2'
+          color: 9C27B0
+          calc_fnc: MIN
+          item:
+            host: 'Template Proxmox VE REST API'
+            key: pve.loadaverage.fifteen
     - uuid: 0fc25cb79f674267825c8f5c3e87869e
       name: 'PVE Memory utilization'
       graph_items:
@@ -2995,16 +3152,16 @@ zabbix_export:
       yaxismax: '0'
       show_work_period: 'NO'
       show_triggers: 'NO'
-      type: PIE
+      type: EXPLODED
       graph_items:
         - color: 0040FF
-          calc_fnc: LAST
+          calc_fnc: MIN
           item:
             host: 'Template Proxmox VE REST API'
             key: pve.rootfs.used
         - sortorder: '1'
           color: 388E3C
-          calc_fnc: LAST
+          calc_fnc: MIN
           item:
             host: 'Template Proxmox VE REST API'
             key: pve.rootfs.avail
