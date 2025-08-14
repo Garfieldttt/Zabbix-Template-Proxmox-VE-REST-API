@@ -1198,6 +1198,8 @@ zabbix_export:
                   expression: |
                     min(/Template Proxmox VE REST API/lxc.status[{#VMID}],900)=0
                     and {$ENABLE_VM_STOP_ALERT:"{#VMID}"}=1
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Template Proxmox VE REST API/lxc.status[{#VMID}])=1'
                   name: 'LXC {#VMID} status is stopped'
                   priority: HIGH
                   description: |
@@ -1874,6 +1876,7 @@ zabbix_export:
                     To permanently suppress the “VM stopped” trigger warning on the host, set the host macro:
                     {$ENABLE_VM_STOP_ALERT:"{#VMID}"}=1 Enable the “VM stopped” trigger. 
                     {$ENABLE_VM_STOP_ALERT:"{#VMID}"}=0 Disable the alert for that item.
+                  manual_close: 'YES'
             - uuid: cccaa9f83c114274bb6de7c343fa6030
               name: 'VM uptime {#VMID}'
               type: DEPENDENT
