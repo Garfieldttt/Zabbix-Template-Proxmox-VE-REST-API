@@ -14,21 +14,21 @@ This Zabbix template enables full monitoring of a Proxmox VE environment via the
 ## 1. Create the Zabbix API User
 
 1. **Log in**  
-   - Open the Proxmox web interface.
+   - Proxmox Web-GUI öffnen.
 
-2. **Create the user**  
-   - Navigate to **Datacenter → Permissions → Users** → **Add**  
-   - **User name:** `zabbix@pam`  
-   - **Password:** (choose a strong password)  
-   - **Email:** (optional)  
-   - Click **Add**.
+2. **User anlegen**  
+   - **Datacenter → Permissions → Users → Add**  
+   - **User:** `zabbix@pam`, Passwort setzen → **Add**
 
-3. **Assign read-only role**  
-   - Under **Datacenter → Permissions**, click **Add → User Permission**  
-     - **Path:** `/`  
-     - **User:** `zabbix@pam`  
-     - **Role:** `PVEAuditor`  
-   - Click **Add**.
+3. **Read-only-Rolle vergeben**  
+   - **Datacenter → Permissions → Add → User Permission**  
+     - **Path:** `/` · **User:** `zabbix@pam` · **Role:** `PVEAuditor` → **Add**
+
+4. **API-Token erstellen (PrivSep: disabled)** *(falls du per Token zugreifen willst)*  
+   - **Datacenter → Permissions → API Tokens → Add**  
+     - **User:** `zabbix@pam` · **Token ID:** z. B. `zbx` · **Privilege Separation:** **disabled** → **Create**
+   - Token in Zabbix verwenden.
+
 
 ---
 
