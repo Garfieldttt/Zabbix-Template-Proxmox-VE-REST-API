@@ -26,7 +26,7 @@ This Zabbix template enables full monitoring of a Proxmox VE environment via the
 
 4. **Create an API token — Privilege Separation: disabled**  
    - **Datacenter → Permissions → API Tokens → Add**  
-     - **User:** `zabbix@pam` · **Token ID:** e.g. `zbx` · **Privilege Separation:** **disabled** → **Create**
+     - **User:** `zabbix@pam` · **Token ID:** e.g. `Zabbix` · **Privilege Separation:** **disabled** → **Create**
 
 ---
 
