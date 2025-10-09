@@ -782,14 +782,8 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.bckpid=="{#BCKPID}")].endtime'
+                    - '$.data[?(@.bckpid=="{#BCKPID}")].endtime.first()'
                   error_handler: DISCARD_VALUE
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
               master_item:
                 key: pve.backup.raw
               tags:
@@ -804,14 +798,8 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.bckpid=="{#BCKPID}")].starttime'
+                    - '$.data[?(@.bckpid=="{#BCKPID}")].starttime.first()'
                   error_handler: DISCARD_VALUE
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
               master_item:
                 key: pve.backup.raw
               tags:
@@ -827,20 +815,14 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.bckpid=="{#BCKPID}")].status'
+                    - '$.data[?(@.bckpid=="{#BCKPID}")].status.first()'
                   error_handler: DISCARD_VALUE
                 - type: REGEX
                   parameters:
-                    - '(?<=^\[")(?:OK|running|stopped|error|unknown error)(?="\]$)'
+                    - '^(OK|running|stopped|error|unknown error)$'
                     - \0
                   error_handler: CUSTOM_VALUE
                   error_handler_params: '4'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
                 - type: STR_REPLACE
                   parameters:
                     - OK
@@ -913,13 +895,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].cpu'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].cpu.first()'
                 - type: MULTIPLIER
                   parameters:
                     - '100'
@@ -939,13 +915,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].disk'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].disk.first()'
               master_item:
                 key: pve.nodes.lxc.raw
               tags:
@@ -962,13 +932,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].maxdisk'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].maxdisk.first()'
               master_item:
                 key: pve.nodes.lxc.raw
               tags:
@@ -985,13 +949,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].maxmem'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].maxmem.first()'
               master_item:
                 key: pve.nodes.lxc.raw
               tags:
@@ -1008,13 +966,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].maxswap'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].maxswap.first()'
               master_item:
                 key: pve.nodes.lxc.raw
               tags:
@@ -1031,13 +983,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].mem'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].mem.first()'
               master_item:
                 key: pve.nodes.lxc.raw
               tags:
@@ -1055,13 +1001,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].name'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].name.first()'
               master_item:
                 key: pve.nodes.lxc.raw
               tags:
@@ -1078,13 +1018,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].netin'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].netin.first()'
                 - type: SIMPLE_CHANGE
                   parameters:
                     - ''
@@ -1101,16 +1035,11 @@ zabbix_export:
               key: 'lxc.netin[{#VMID}]'
               delay: '0'
               units: Bytes
+              description: 'Cumulative host-level network output (bytes received) on Proxmox host for LXC {#VMID}, since last LXC start.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].netin'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].netin.first()'
               master_item:
                 key: pve.nodes.lxc.raw
               tags:
@@ -1127,13 +1056,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].netout'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].netout.first()'
                 - type: SIMPLE_CHANGE
                   parameters:
                     - ''
@@ -1154,13 +1077,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].netout'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].netout.first()'
               master_item:
                 key: pve.nodes.lxc.raw
               tags:
@@ -1178,13 +1095,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].status'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].status.first()'
                 - type: STR_REPLACE
                   parameters:
                     - stopped
@@ -1227,13 +1138,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].swap'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].swap.first()'
               master_item:
                 key: pve.nodes.lxc.raw
               tags:
@@ -1251,13 +1156,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].uptime'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].uptime.first()'
               master_item:
                 key: pve.nodes.lxc.raw
               tags:
@@ -1273,13 +1172,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].cpus'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].cpus.first()'
               master_item:
                 key: pve.nodes.lxc.raw
               tags:
@@ -1409,13 +1302,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.node=="{#NODE_NAME}")].ssl_fingerprint'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.node=="{#NODE_NAME}")].ssl_fingerprint.first()'
               master_item:
                 key: pve.nodes.raw
               tags:
@@ -1432,13 +1319,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.node=="{#NODE_NAME}")].status'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.node=="{#NODE_NAME}")].status.first()'
                 - type: STR_REPLACE
                   parameters:
                     - online
@@ -1473,7 +1354,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.node=="{#NODE_NAME}")].uptime'
+                    - '$.data[?(@.node=="{#NODE_NAME}")].uptime.first()'
                 - type: LTRIM
                   parameters:
                     - '["'
@@ -1531,15 +1412,9 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].balloon_min'
+                    - '$.data[?(@.vmid=={#VMID})].balloon_min.first()'
                   error_handler: CUSTOM_VALUE
                   error_handler_params: '0'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
               master_item:
                 key: pve.nodes.qemu.raw
               tags:
@@ -1559,15 +1434,9 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].balloon'
+                    - '$.data[?(@.vmid=={#VMID})].balloon.first()'
                   error_handler: CUSTOM_VALUE
                   error_handler_params: '0'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
               master_item:
                 key: pve.nodes.qemu.raw
               tags:
@@ -1585,13 +1454,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].cpu'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].cpu.first()'
                 - type: MULTIPLIER
                   parameters:
                     - '100'
@@ -1635,13 +1498,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})][''running-machine'']'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})][''running-machine''].first()'
               master_item:
                 key: pve.nodes.qemu.raw
               tags:
@@ -1658,13 +1515,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].maxmem'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].maxmem.first()'
               master_item:
                 key: pve.nodes.qemu.raw
               tags:
@@ -1681,13 +1532,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].mem'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].mem.first()'
               master_item:
                 key: pve.nodes.qemu.raw
               tags:
@@ -1705,13 +1550,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].name'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].name.first()'
               master_item:
                 key: pve.nodes.qemu.raw
               tags:
@@ -1723,17 +1562,10 @@ zabbix_export:
               key: 'vm.netin.current[{#VMID}]'
               delay: '0'
               units: Bytes
-              description: 'Cumulative host-level network input (bytes received) on Proxmox host for VM {#VMID}, since last VM start.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].netin'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].netin.first()'
                 - type: SIMPLE_CHANGE
                   parameters:
                     - ''
@@ -1750,16 +1582,11 @@ zabbix_export:
               key: 'vm.netin[{#VMID}]'
               delay: '0'
               units: Bytes
+              description: 'Cumulative host-level network input (bytes received) on Proxmox host for VM {#VMID}, since last VM start.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].netin'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].netin.first()'
               master_item:
                 key: pve.nodes.qemu.raw
               tags:
@@ -1776,13 +1603,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].netout'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].netout.first()'
                 - type: SIMPLE_CHANGE
                   parameters:
                     - ''
@@ -1802,13 +1623,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].netout'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].netout.first()'
               master_item:
                 key: pve.nodes.qemu.raw
               tags:
@@ -1826,13 +1641,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].maxdisk'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].maxdisk.first()'
               master_item:
                 key: pve.nodes.qemu.raw
               tags:
@@ -1850,13 +1659,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].status'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].status.first()'
                 - type: STR_REPLACE
                   parameters:
                     - stopped
@@ -1878,7 +1681,7 @@ zabbix_export:
                   value: '{#VMID}'
               trigger_prototypes:
                 - uuid: ac085aa97edb40dcb08272e859a39e36
-                  expression: 'min(/Template Proxmox VE REST API/vm.status[{#VMID}],900)=0 and {$ENABLE_VM_STOP_ALERT:"{#VMID}"}=1'
+                  expression: 'max(/Template Proxmox VE REST API/vm.status[{#VMID}],900)=0 and {$ENABLE_VM_STOP_ALERT:"{#VMID}"}=1'
                   recovery_mode: RECOVERY_EXPRESSION
                   recovery_expression: 'last(/Template Proxmox VE REST API/vm.status[{#VMID}])=1'
                   name: 'VM {#VMID} status is stopped'
@@ -1898,13 +1701,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].uptime'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.vmid=={#VMID})].uptime.first()'
               master_item:
                 key: pve.nodes.qemu.raw
               tags:
@@ -2022,13 +1819,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.storage=="{#STORAGE_NAME}")].active'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.storage=="{#STORAGE_NAME}")].active.first()'
               master_item:
                 key: pve.storage.raw
               tags:
@@ -2043,13 +1834,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.storage=="{#STORAGE_NAME}")].avail'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.storage=="{#STORAGE_NAME}")].avail.first()'
               master_item:
                 key: pve.storage.raw
               tags:
@@ -2074,13 +1859,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.storage=="{#STORAGE_NAME}")].content'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.storage=="{#STORAGE_NAME}")].content.first()'
               master_item:
                 key: pve.storage.raw
               tags:
@@ -2096,13 +1875,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.storage=="{#STORAGE_NAME}")].type'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.storage=="{#STORAGE_NAME}")].type.first()'
               master_item:
                 key: pve.storage.raw
               tags:
@@ -2120,13 +1893,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.storage=="{#STORAGE_NAME}")].shared'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.storage=="{#STORAGE_NAME}")].shared.first()'
               master_item:
                 key: pve.storage.raw
               tags:
@@ -2141,13 +1908,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.storage=="{#STORAGE_NAME}")].total'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.storage=="{#STORAGE_NAME}")].total.first()'
               master_item:
                 key: pve.storage.raw
               tags:
@@ -2162,13 +1923,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.storage=="{#STORAGE_NAME}")].used'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.data[?(@.storage=="{#STORAGE_NAME}")].used.first()'
               master_item:
                 key: pve.storage.raw
               tags:
@@ -2264,14 +2019,8 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.body.data[?(@.grpid=="{#GRPID}" && @.type=="{#TYPE}")].endtime'
+                    - '$.body.data[?(@.grpid=="{#GRPID}" && @.type=="{#TYPE}")].endtime.first()'
                   error_handler: DISCARD_VALUE
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
               master_item:
                 key: pve.tasks.raw
               tags:
@@ -2289,7 +2038,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.body.data[?(@.grpid=="{#GRPID}" && @.type=="{#TYPE}")].starttime'
+                    - '$.body.data[?(@.grpid=="{#GRPID}" && @.type=="{#TYPE}")].starttime.first()'
                   error_handler: DISCARD_VALUE
                 - type: LTRIM
                   parameters:
@@ -2325,20 +2074,14 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.body.data[?(@.grpid=="{#GRPID}" && @.type=="{#TYPE}")].status'
+                    - '$.body.data[?(@.grpid=="{#GRPID}" && @.type=="{#TYPE}")].status.first()'
                   error_handler: DISCARD_VALUE
                 - type: REGEX
                   parameters:
-                    - '^\["(?:OK|running|stopped|error|unexpected status|CT is locked \(disk\)|timeout waiting on systemd|Failed to run vncproxy\.|unable to read tail \(got 0 byte\)|interrupted by signal)"\]$'
+                    - '^(OK|running|stopped|error|unexpected status|CT is locked \(disk\)|timeout waiting on systemd|Failed to run vncproxy\.|unable to read tail \(got 0 byte\)|interrupted by signal)$'
                     - \0
                   error_handler: CUSTOM_VALUE
                   error_handler_params: '10'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
                 - type: STR_REPLACE
                   parameters:
                     - OK
@@ -2436,15 +2179,9 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.body.data[?(@.userid==''{#USERID}'')].email'
+                    - '$.body.data[?(@.userid==''{#USERID}'')].email.first()'
                   error_handler: CUSTOM_VALUE
                   error_handler_params: 'No email address available.'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
               master_item:
                 key: pve.user.raw
               tags:
@@ -2459,13 +2196,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.body.data[?(@.userid==''{#USERID}'')].expire'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.body.data[?(@.userid==''{#USERID}'')].expire.first()'
               master_item:
                 key: pve.user.raw
               tags:
@@ -2491,15 +2222,9 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.body.data[?(@.userid==''{#USERID}'')].firstname'
+                    - '$.body.data[?(@.userid==''{#USERID}'')].firstname.first()'
                   error_handler: CUSTOM_VALUE
                   error_handler_params: 'No first name available.'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
               master_item:
                 key: pve.user.raw
               tags:
@@ -2515,15 +2240,9 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.body.data[?(@.userid==''{#USERID}'')].lastname'
+                    - '$.body.data[?(@.userid==''{#USERID}'')].lastname.first()'
                   error_handler: CUSTOM_VALUE
                   error_handler_params: 'No last name available.'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
               master_item:
                 key: pve.user.raw
               tags:
@@ -2539,13 +2258,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.body.data[?(@.userid==''{#USERID}'')][''realm-type'']'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.body.data[?(@.userid==''{#USERID}'')][''realm-type''].first()'
               master_item:
                 key: pve.user.raw
               tags:
@@ -2562,13 +2275,7 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.body.data[?(@.userid==''{#USERID}'')].enable'
-                - type: LTRIM
-                  parameters:
-                    - '["'
-                - type: RTRIM
-                  parameters:
-                    - '"]'
+                    - '$.body.data[?(@.userid==''{#USERID}'')].enable.first()'
               master_item:
                 key: pve.user.raw
               tags:
