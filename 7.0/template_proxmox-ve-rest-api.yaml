@@ -430,7 +430,7 @@ zabbix_export:
           name: 'PVE lxc raw'
           type: HTTP_AGENT
           key: pve.nodes.lxc.raw
-          history: 1d
+          history: '0'
           value_type: TEXT
           trends: '0'
           url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/lxc'
@@ -443,7 +443,7 @@ zabbix_export:
           name: 'PVE qemu raw'
           type: HTTP_AGENT
           key: pve.nodes.qemu.raw
-          history: 1d
+          history: '0'
           value_type: TEXT
           trends: '0'
           url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/qemu?full=1'
@@ -456,7 +456,7 @@ zabbix_export:
           name: 'PVE nodes raw'
           type: HTTP_AGENT
           key: pve.nodes.raw
-          history: 1d
+          history: '0'
           value_type: TEXT
           trends: '0'
           timeout: 20s
@@ -595,7 +595,7 @@ zabbix_export:
           name: 'PVE tasks raw'
           type: HTTP_AGENT
           key: pve.tasks.raw
-          history: 1d
+          history: '0'
           value_type: TEXT
           trends: '0'
           preprocessing:
@@ -734,7 +734,7 @@ zabbix_export:
           name: 'PVE user raw'
           type: HTTP_AGENT
           key: pve.user.raw
-          history: 1d
+          history: '0'
           value_type: TEXT
           trends: '0'
           timeout: 20s
@@ -749,6 +749,7 @@ zabbix_export:
           name: 'PVE version'
           type: HTTP_AGENT
           key: pve.version
+          history: '0'
           value_type: CHAR
           trends: '0'
           preprocessing:
