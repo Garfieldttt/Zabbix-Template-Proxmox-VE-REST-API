@@ -430,7 +430,7 @@ zabbix_export:
           name: 'PVE lxc raw'
           type: HTTP_AGENT
           key: pve.nodes.lxc.raw
-          history: '0'
+          history: 1d
           value_type: TEXT
           trends: '0'
           url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/lxc'
@@ -534,7 +534,7 @@ zabbix_export:
           name: 'PVE status raw'
           type: HTTP_AGENT
           key: pve.status
-          history: 1d
+          history: '0'
           value_type: TEXT
           trends: '0'
           url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/status'
@@ -547,7 +547,7 @@ zabbix_export:
           name: 'PVE storage raw'
           type: HTTP_AGENT
           key: pve.storage.raw
-          history: 1d
+          history: '0'
           value_type: TEXT
           trends: '0'
           timeout: 20s
@@ -1683,8 +1683,6 @@ zabbix_export:
               trigger_prototypes:
                 - uuid: ac085aa97edb40dcb08272e859a39e36
                   expression: 'max(/Template Proxmox VE REST API/vm.status[{#VMID}],900)=0 and {$ENABLE_VM_STOP_ALERT:"{#VMID}"}=1'
-                  recovery_mode: RECOVERY_EXPRESSION
-                  recovery_expression: 'last(/Template Proxmox VE REST API/vm.status[{#VMID}])=1'
                   name: 'VM {#VMID} status is stopped'
                   priority: HIGH
                   description: |
@@ -1826,6 +1824,15 @@ zabbix_export:
               tags:
                 - tag: PVE
                   value: Storage
+              trigger_prototypes:
+                - uuid: cf31e839babb4b8a90b395ad3df47023
+                  expression: 'min(/Template Proxmox VE REST API/storage.active[{#STORAGE_NAME}],900)=0 and {$ENABLE_STORAGE_INACTIVE_ALERT:"{#STORAGE_NAME}"}=1'
+                  name: 'Storage [{#STORAGE_NAME}] not available'
+                  priority: AVERAGE
+                  description: |
+                    Use the following host macros to control the “Storage not available” trigger for each storage:
+                    {$ENABLE_STORAGE_INACTIVE_ALERT:"{#STORAGE_NAME}"}=1 enables the “Storage not available” trigger
+                    {$ENABLE_STORAGE_INACTIVE_ALERT:"{#STORAGE_NAME}"}=0 disables (suppresses) the “Storage not available” trigger
             - uuid: 8e1de775d9524b27b37ad414ce961d9b
               name: 'Storage availble {#STORAGE_NAME}'
               type: DEPENDENT
@@ -1841,15 +1848,6 @@ zabbix_export:
               tags:
                 - tag: PVE
                   value: Storage
-              trigger_prototypes:
-                - uuid: cf31e839babb4b8a90b395ad3df47023
-                  expression: 'min(/Template Proxmox VE REST API/storage.avail[{#STORAGE_NAME}],900)=0 and {$ENABLE_STORAGE_INACTIVE_ALERT:"{#STORAGE_NAME}"}=1'
-                  name: 'Storage [{#STORAGE_NAME}] not available'
-                  priority: AVERAGE
-                  description: |
-                    Use the following host macros to control the “Storage not available” trigger for each storage:
-                    {$ENABLE_STORAGE_INACTIVE_ALERT:"{#STORAGE_NAME}"}=1 enables the “Storage not available” trigger
-                    {$ENABLE_STORAGE_INACTIVE_ALERT:"{#STORAGE_NAME}"}=0 disables (suppresses) the “Storage not available” trigger
             - uuid: 7f8d7a2cbdab48f097d46c92b870bb1b
               name: 'Storage content {#STORAGE_NAME}'
               type: DEPENDENT
@@ -2318,6 +2316,9 @@ zabbix_export:
         - macro: '{$ENABLE_VM_STOP_ALERT}'
           value: '1'
           description: 'To enable this trigger set to 1, to disable alerts on this trigger set value to 0'
+        - macro: '{$MEMORY_USAGE_HIGH}'
+          value: '90'
+          description: 'High memory usage threshold (%) for warning level trigger'
         - macro: '{$PVE_API_TOKEN}'
           type: SECRET_TEXT
           description: 'The API token secret used to authenticate with the Proxmox VE REST API.'
@@ -2861,7 +2862,7 @@ zabbix_export:
       opdata: 'Current cpu average: {ITEM.LASTVALUE1}'
       priority: AVERAGE
     - uuid: d7b8381cedda4cd0bcb28053cd731ddf
-      expression: '(last(/Template Proxmox VE REST API/pve.memory.used) / last(/Template Proxmox VE REST API/pve.memory.total)) * 100 > 90'
+      expression: '(last(/Template Proxmox VE REST API/pve.memory.used) / last(/Template Proxmox VE REST API/pve.memory.total)) * 100 > {$MEMORY_USAGE_HIGH}'
       name: 'High memory usage on {HOST.NAME} (>90%)'
       opdata: 'Memory used: {ITEM.LASTVALUE1}'
       priority: AVERAGE
