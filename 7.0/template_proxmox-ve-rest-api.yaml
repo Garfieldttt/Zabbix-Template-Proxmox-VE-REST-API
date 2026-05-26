@@ -1565,17 +1565,6 @@ zabbix_export:
                   value: Memory
                 - tag: LXC-Container
                   value: '{#VMID}'
-              trigger_prototypes:
-                - uuid: cc2b3c2a18c44696aaef7fc779a414b1
-                  expression: 'min(/Template Proxmox VE REST API/lxc.memutil[{#VMID}],5m)>{$MEMORY.UTIL.MAX:"{#VMID}"} and last(/Template Proxmox VE REST API/lxc.memusage[{#VMID}])>0'
-                  name: 'LXC {#VMID}: RAM under-provisioned (>{$MEMORY.UTIL.MAX:"{#VMID}"}% for 5 min)'
-                  event_name: 'LXC {#VMID} ({#VM_NAME}): RAM under-provisioned, {?last(/Template Proxmox VE REST API/lxc.memusage[{#VMID}])*100/last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])}% of {?last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])/1073741824} GB used'
-                  opdata: 'Used: {?last(/Template Proxmox VE REST API/lxc.memusage[{#VMID}])*100/last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])}% | Allocated: {?last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])/1073741824} GB'
-                  priority: WARNING
-                  description: 'LXC container memory utilization has been above {$MEMORY.UTIL.MAX}% for 5 minutes. Consider increasing allocated RAM.'
-                  tags:
-                    - tag: scope
-                      value: capacity
             - uuid: 698ac639b14248dbabc4ceef3e8fd5e4
               name: 'Name of  {#VMID}'
               type: DEPENDENT
@@ -2308,17 +2297,6 @@ zabbix_export:
                   value: Memory
                 - tag: QEMU/KVM-VMs
                   value: '{#VMID}'
-              trigger_prototypes:
-                - uuid: fabe765c1c474710b999e11d3ae13ebf
-                  expression: 'min(/Template Proxmox VE REST API/vm.memutil[{#VMID}],5m)>{$MEMORY.UTIL.MAX:"{#VMID}"} and last(/Template Proxmox VE REST API/vm.memusage[{#VMID}])<last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])'
-                  name: 'VM {#VMID}: RAM under-provisioned (>{$MEMORY.UTIL.MAX:"{#VMID}"}% for 5 min)'
-                  event_name: 'VM {#VMID} ({#VM_NAME}): RAM under-provisioned, {?last(/Template Proxmox VE REST API/vm.memusage[{#VMID}])*100/last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])}% of {?last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])/1073741824} GB used'
-                  opdata: 'Used: {?last(/Template Proxmox VE REST API/vm.memusage[{#VMID}])*100/last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])}% | Allocated: {?last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])/1073741824} GB'
-                  priority: WARNING
-                  description: 'VM memory utilization has been above {$MEMORY.UTIL.MAX}% for 5 minutes. Consider increasing allocated RAM. Note: requires ballooning or QEMU guest agent.'
-                  tags:
-                    - tag: scope
-                      value: capacity
             - uuid: 0b5c2c3327b9487c8434f39ed092fb48
               name: 'VM name {#VMID}'
               type: DEPENDENT
