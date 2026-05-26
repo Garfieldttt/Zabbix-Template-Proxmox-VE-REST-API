@@ -1580,7 +1580,7 @@ zabbix_export:
                   expression: 'min(/Template Proxmox VE REST API/lxc.memutil[{#VMID}],5m)>{$MEMORY.UTIL.MAX:"{#VMID}"} and last(/Template Proxmox VE REST API/lxc.memusage[{#VMID}])>0'
                   name: 'LXC {#VMID}: RAM under-provisioned (>{$MEMORY.UTIL.MAX:"{#VMID}"}% for 5 min)'
                   event_name: 'LXC {#VMID} ({#VM_NAME}): RAM under-provisioned, {?last(/Template Proxmox VE REST API/lxc.memusage[{#VMID}])*100/last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])}% of {?last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])/1073741824} GB used'
-                  opdata: 'Used: {?last(/Template Proxmox VE REST API/lxc.memusage[{#VMID}])*100/last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])}% | Allocated: {?last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])/1073741824} GB | Suggest: {?last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])*1.5/1073741824} GB'
+                  opdata: 'Used: {?last(/Template Proxmox VE REST API/lxc.memusage[{#VMID}])*100/last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])}% | Allocated: {?last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])/1073741824} GB'
                   priority: WARNING
                   description: 'LXC container memory utilization has been above {$MEMORY.UTIL.MAX}% for 5 minutes. Consider increasing allocated RAM.'
                   tags:
@@ -2343,7 +2343,7 @@ zabbix_export:
                   expression: 'min(/Template Proxmox VE REST API/vm.memutil[{#VMID}],5m)>{$MEMORY.UTIL.MAX:"{#VMID}"} and last(/Template Proxmox VE REST API/vm.memusage[{#VMID}])<last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])'
                   name: 'VM {#VMID}: RAM under-provisioned (>{$MEMORY.UTIL.MAX:"{#VMID}"}% for 5 min)'
                   event_name: 'VM {#VMID} ({#VM_NAME}): RAM under-provisioned, {?last(/Template Proxmox VE REST API/vm.memusage[{#VMID}])*100/last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])}% of {?last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])/1073741824} GB used'
-                  opdata: 'Used: {?last(/Template Proxmox VE REST API/vm.memusage[{#VMID}])*100/last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])}% | Allocated: {?last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])/1073741824} GB | Suggest: {?last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])*1.5/1073741824} GB'
+                  opdata: 'Used: {?last(/Template Proxmox VE REST API/vm.memusage[{#VMID}])*100/last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])}% | Allocated: {?last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])/1073741824} GB'
                   priority: WARNING
                   description: 'VM memory utilization has been above {$MEMORY.UTIL.MAX}% for 5 minutes. Consider increasing allocated RAM. Note: requires ballooning or QEMU guest agent.'
                   tags:
