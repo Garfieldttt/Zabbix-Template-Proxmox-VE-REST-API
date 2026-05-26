@@ -1418,7 +1418,7 @@ zabbix_export:
                 - uuid: 95a45d8e60c24fcab5081813c4ad4d2d
                   expression: 'avg(/Template Proxmox VE REST API/lxc.cpuusage[{#VMID}],1d)<{$VM.CPU.UTIL.LOW:"{#VMID}"} and avg(/Template Proxmox VE REST API/lxc.cpuusage[{#VMID}],1d)>0'
                   name: 'LXC {#VMID}: CPU over-provisioned (<{$VM.CPU.UTIL.LOW:"{#VMID}"}% avg for 24h)'
-                  event_name: 'LXC {#VMID} ({#NAME}): CPU over-provisioned, avg {?avg(/Template Proxmox VE REST API/lxc.cpuusage[{#VMID}],1d)}% over 24h'
+                  event_name: 'LXC {#VMID} ({#VM_NAME}): CPU over-provisioned, avg {?avg(/Template Proxmox VE REST API/lxc.cpuusage[{#VMID}],1d)}% over 24h'
                   opdata: 'Avg CPU: {?avg(/Template Proxmox VE REST API/lxc.cpuusage[{#VMID}],1d)}% | Consider reducing vCPUs'
                   priority: INFO
                   description: 'LXC average CPU utilization has been below {$VM.CPU.UTIL.LOW}% for 24 hours. Consider reducing allocated vCPUs.'
@@ -1579,7 +1579,7 @@ zabbix_export:
                 - uuid: cc2b3c2a18c44696aaef7fc779a414b1
                   expression: 'min(/Template Proxmox VE REST API/lxc.memutil[{#VMID}],5m)>{$MEMORY.UTIL.MAX:"{#VMID}"} and last(/Template Proxmox VE REST API/lxc.memusage[{#VMID}])>0'
                   name: 'LXC {#VMID}: RAM under-provisioned (>{$MEMORY.UTIL.MAX:"{#VMID}"}% for 5 min)'
-                  event_name: 'LXC {#VMID} ({#NAME}): RAM under-provisioned, {?min(/Template Proxmox VE REST API/lxc.memutil[{#VMID}],5m)}% of {?last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])/1073741824} GB used'
+                  event_name: 'LXC {#VMID} ({#VM_NAME}): RAM under-provisioned, {?min(/Template Proxmox VE REST API/lxc.memutil[{#VMID}],5m)}% of {?last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])/1073741824} GB used'
                   opdata: 'Used: {?min(/Template Proxmox VE REST API/lxc.memutil[{#VMID}],5m)}% | Allocated: {?last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])/1073741824} GB | Suggest: {?last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])*1.5/1073741824} GB'
                   priority: WARNING
                   description: 'LXC container memory utilization has been above {$MEMORY.UTIL.MAX}% for 5 minutes. Consider increasing allocated RAM.'
@@ -1589,7 +1589,7 @@ zabbix_export:
                 - uuid: 63fb525f53fc4b3e858268524f9e44c7
                   expression: 'avg(/Template Proxmox VE REST API/lxc.memutil[{#VMID}],1d)<{$VM.MEM.UTIL.LOW:"{#VMID}"} and last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])>536870912 and avg(/Template Proxmox VE REST API/lxc.memusage[{#VMID}],1d)>0'
                   name: 'LXC {#VMID}: RAM over-provisioned (<{$VM.MEM.UTIL.LOW:"{#VMID}"}% avg for 24h)'
-                  event_name: 'LXC {#VMID} ({#NAME}): RAM over-provisioned, avg {?avg(/Template Proxmox VE REST API/lxc.memutil[{#VMID}],1d)}% of {?last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])/1073741824} GB'
+                  event_name: 'LXC {#VMID} ({#VM_NAME}): RAM over-provisioned, avg {?avg(/Template Proxmox VE REST API/lxc.memutil[{#VMID}],1d)}% of {?last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])/1073741824} GB'
                   opdata: 'Avg: {?avg(/Template Proxmox VE REST API/lxc.memutil[{#VMID}],1d)}% | Allocated: {?last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])/1073741824} GB'
                   priority: INFO
                   description: 'LXC average memory utilization has been below {$VM.MEM.UTIL.LOW}% for 24 hours. Consider reducing allocated RAM.'
@@ -2213,7 +2213,7 @@ zabbix_export:
                 - uuid: 36c3a2243dc144ca9210cd17bad932d1
                   expression: 'avg(/Template Proxmox VE REST API/vm.cpuusage[{#VMID}],1d)<{$VM.CPU.UTIL.LOW:"{#VMID}"} and avg(/Template Proxmox VE REST API/vm.cpuusage[{#VMID}],1d)>0'
                   name: 'VM {#VMID}: CPU over-provisioned (<{$VM.CPU.UTIL.LOW:"{#VMID}"}% avg for 24h)'
-                  event_name: 'VM {#VMID} ({#NAME}): CPU over-provisioned, avg {?avg(/Template Proxmox VE REST API/vm.cpuusage[{#VMID}],1d)}% over 24h'
+                  event_name: 'VM {#VMID} ({#VM_NAME}): CPU over-provisioned, avg {?avg(/Template Proxmox VE REST API/vm.cpuusage[{#VMID}],1d)}% over 24h'
                   opdata: 'Avg CPU: {?avg(/Template Proxmox VE REST API/vm.cpuusage[{#VMID}],1d)}% | Consider reducing vCPUs'
                   priority: INFO
                   description: 'VM average CPU utilization has been below {$VM.CPU.UTIL.LOW}% for 24 hours. Consider reducing allocated vCPUs.'
@@ -2342,7 +2342,7 @@ zabbix_export:
                 - uuid: fabe765c1c474710b999e11d3ae13ebf
                   expression: 'min(/Template Proxmox VE REST API/vm.memutil[{#VMID}],5m)>{$MEMORY.UTIL.MAX:"{#VMID}"} and last(/Template Proxmox VE REST API/vm.memusage[{#VMID}])<last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])'
                   name: 'VM {#VMID}: RAM under-provisioned (>{$MEMORY.UTIL.MAX:"{#VMID}"}% for 5 min)'
-                  event_name: 'VM {#VMID} ({#NAME}): RAM under-provisioned, {?min(/Template Proxmox VE REST API/vm.memutil[{#VMID}],5m)}% of {?last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])/1073741824} GB used'
+                  event_name: 'VM {#VMID} ({#VM_NAME}): RAM under-provisioned, {?min(/Template Proxmox VE REST API/vm.memutil[{#VMID}],5m)}% of {?last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])/1073741824} GB used'
                   opdata: 'Used: {?min(/Template Proxmox VE REST API/vm.memutil[{#VMID}],5m)}% | Allocated: {?last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])/1073741824} GB | Suggest: {?last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])*1.5/1073741824} GB'
                   priority: WARNING
                   description: 'VM memory utilization has been above {$MEMORY.UTIL.MAX}% for 5 minutes. Consider increasing allocated RAM. Note: requires ballooning or QEMU guest agent.'
@@ -2352,7 +2352,7 @@ zabbix_export:
                 - uuid: e105c33eea03452fa90eeac531aa9c78
                   expression: 'avg(/Template Proxmox VE REST API/vm.memutil[{#VMID}],1d)<{$VM.MEM.UTIL.LOW:"{#VMID}"} and last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])>536870912 and avg(/Template Proxmox VE REST API/vm.memusage[{#VMID}],1d)>0'
                   name: 'VM {#VMID}: RAM over-provisioned (<{$VM.MEM.UTIL.LOW:"{#VMID}"}% avg for 24h)'
-                  event_name: 'VM {#VMID} ({#NAME}): RAM over-provisioned, avg {?avg(/Template Proxmox VE REST API/vm.memutil[{#VMID}],1d)}% of {?last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])/1073741824} GB'
+                  event_name: 'VM {#VMID} ({#VM_NAME}): RAM over-provisioned, avg {?avg(/Template Proxmox VE REST API/vm.memutil[{#VMID}],1d)}% of {?last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])/1073741824} GB'
                   opdata: 'Avg: {?avg(/Template Proxmox VE REST API/vm.memutil[{#VMID}],1d)}% | Allocated: {?last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])/1073741824} GB'
                   priority: INFO
                   description: 'VM average memory utilization has been below {$VM.MEM.UTIL.LOW}% for 24 hours. Consider reducing allocated RAM. Note: requires ballooning or QEMU guest agent.'
@@ -2652,6 +2652,8 @@ zabbix_export:
               path: $.type
             - lld_macro: '{#VMID}'
               path: $.vmid
+            - lld_macro: '{#VM_NAME}'
+              path: $.name
           preprocessing:
             - type: JSONPATH
               parameters:
