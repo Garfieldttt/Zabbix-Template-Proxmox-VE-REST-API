@@ -1590,7 +1590,7 @@ zabbix_export:
                   expression: 'avg(/Template Proxmox VE REST API/lxc.memutil[{#VMID}],1d)<{$VM.MEM.UTIL.LOW:"{#VMID}"} and last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])>536870912 and avg(/Template Proxmox VE REST API/lxc.memusage[{#VMID}],1d)>0'
                   name: 'LXC {#VMID}: RAM over-provisioned (<{$VM.MEM.UTIL.LOW:"{#VMID}"}% avg for 24h)'
                   event_name: 'LXC {#VMID} ({#NAME}): RAM over-provisioned — avg {?avg(/Template Proxmox VE REST API/lxc.memutil[{#VMID}],1d)}% of {?last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])/1073741824} GB'
-                  opdata: 'Avg: {?avg(/Template Proxmox VE REST API/lxc.memutil[{#VMID}],1d)}% | Allocated: {?last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])/1073741824} GB | Suggest: {?avg(/Template Proxmox VE REST API/lxc.memutil[{#VMID}],1d)*last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])*1.5/100/1073741824} GB'
+                  opdata: 'Avg: {?avg(/Template Proxmox VE REST API/lxc.memutil[{#VMID}],1d)}% | Allocated: {?last(/Template Proxmox VE REST API/lxc.maxmem[{#VMID}])/1073741824} GB'
                   priority: INFO
                   description: 'LXC average memory utilization has been below {$VM.MEM.UTIL.LOW}% for 24 hours. Consider reducing allocated RAM.'
                   tags:
@@ -2353,7 +2353,7 @@ zabbix_export:
                   expression: 'avg(/Template Proxmox VE REST API/vm.memutil[{#VMID}],1d)<{$VM.MEM.UTIL.LOW:"{#VMID}"} and last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])>536870912 and avg(/Template Proxmox VE REST API/vm.memusage[{#VMID}],1d)>0'
                   name: 'VM {#VMID}: RAM over-provisioned (<{$VM.MEM.UTIL.LOW:"{#VMID}"}% avg for 24h)'
                   event_name: 'VM {#VMID} ({#NAME}): RAM over-provisioned — avg {?avg(/Template Proxmox VE REST API/vm.memutil[{#VMID}],1d)}% of {?last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])/1073741824} GB'
-                  opdata: 'Avg: {?avg(/Template Proxmox VE REST API/vm.memutil[{#VMID}],1d)}% | Allocated: {?last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])/1073741824} GB | Suggest: {?avg(/Template Proxmox VE REST API/vm.memutil[{#VMID}],1d)*last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])*1.5/100/1073741824} GB'
+                  opdata: 'Avg: {?avg(/Template Proxmox VE REST API/vm.memutil[{#VMID}],1d)}% | Allocated: {?last(/Template Proxmox VE REST API/vm.maxmem[{#VMID}])/1073741824} GB'
                   priority: INFO
                   description: 'VM average memory utilization has been below {$VM.MEM.UTIL.LOW}% for 24 hours. Consider reducing allocated RAM. Note: requires ballooning or QEMU guest agent.'
                   tags:
