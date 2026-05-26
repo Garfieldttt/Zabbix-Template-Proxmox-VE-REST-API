@@ -97,6 +97,8 @@ PVEAPIToken=zabbix@pam!Zabbix=<token-secret>
 | `{$CLUSTER.NODES.OFFLINE.MAX}` | `0` | Max. tolerated offline nodes (raise during maintenance) |
 | `{$DISK.WEAROUT.MIN}` | `20` | Min. SSD wearout remaining before warning (%) |
 | `{$PVE.USER.EXPIRE.TIME}` | `172800` | Seconds before user expiry to warn (172800 = 2 days) |
+| `{$VM.CPU.UTIL.LOW}` | `5` | CPU over-provisioning threshold (%). INFO trigger fires when 24h avg stays below this value. |
+| `{$VM.MEM.UTIL.LOW}` | `20` | RAM over-provisioning threshold (%). INFO trigger fires when 24h avg stays below this value. |
 
 ### Alert Enable/Disable Macros
 
@@ -153,6 +155,9 @@ Set to `0` to suppress a trigger globally. Supports context macros for per-insta
 | Memory utilization over threshold | Warning |
 | VM/LXC stopped | High |
 | VM/LXC restarted (uptime < 10 min) | Info |
+| RAM under-provisioned (>90% for 5 min) | Warning |
+| RAM over-provisioned (<20% avg for 24h) | Info |
+| CPU over-provisioned (<5% avg for 24h) | Info |
 
 ### Storage Prototypes
 
