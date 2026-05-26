@@ -16,7 +16,7 @@ Works on standalone single-node setups as well as full clusters.
 
 ## 1. Create the API Token
 
-### Option A — Without Privilege Separation (recommended, simpler)
+### Option A, Without Privilege Separation (recommended, simpler)
 
 1. **Create a user** (skip if using `root@pam`)
    - **Datacenter → Permissions → Users → Add**
@@ -29,7 +29,7 @@ Works on standalone single-node setups as well as full clusters.
 3. **Create the API token**
    - **Datacenter → Permissions → API Tokens → Add**
    - User: `zabbix@pam` · Token ID: `Zabbix` · **Privilege Separation: disabled** → **Add**
-   - **Copy the token secret — it is shown only once.**
+   - **Copy the token secret, it is shown only once.**
 
 The token inherits all permissions from the user. Header format:
 ```
@@ -38,9 +38,9 @@ PVEAPIToken=zabbix@pam!Zabbix=<token-secret>
 
 ---
 
-### Option B — With Privilege Separation (granular, more secure)
+### Option B, With Privilege Separation (granular, more secure)
 
-1. Follow steps 1–2 from Option A.
+1. Follow steps 1-2 from Option A.
 
 2. **Create the API token**
    - **Datacenter → Permissions → API Tokens → Add**
@@ -79,7 +79,7 @@ PVEAPIToken=zabbix@pam!Zabbix=<token-secret>
 | `{$PVE_NODE}` | `pve` | Node name as shown in PVE (Datacenter → Node) |
 | `{$PVE_API_USER}` | `zabbix@pam` | API user including realm |
 | `{$PVE_API_TOKEN_ID}` | `Zabbix` | Token ID |
-| `{$PVE_API_TOKEN}` | *(secret)* | Token secret — set as **Secret text** macro type |
+| `{$PVE_API_TOKEN}` | *(secret)* | Token secret, set as **Secret text** macro type |
 
 ### Threshold Macros
 
@@ -184,7 +184,7 @@ Set to `0` to suppress a trigger globally. Supports context macros for per-insta
 
 ## 6. Dashboard
 
-The template includes a pre-built dashboard **"Proxmox VE – Monitoring Dashboard"** with the following pages:
+The template includes a pre-built dashboard **"Proxmox VE - Monitoring Dashboard"** with the following pages:
 
 | Page | Contents |
 |------|----------|
@@ -204,7 +204,7 @@ The template includes a pre-built dashboard **"Proxmox VE – Monitoring Dashboa
 
 ## 7. Notes
 
-- **Single-node without cluster:** Fully supported. `pve.cluster.quorum` returns `1` and `pve.cluster.name` returns `standalone` — the quorum-lost trigger will not fire.
+- **Single-node without cluster:** Fully supported. `pve.cluster.quorum` returns `1` and `pve.cluster.name` returns `standalone`, the quorum-lost trigger will not fire.
 - **Disk monitoring:** Requires `Sys.Audit` privilege. If disk items show "not supported", check that the API token role is applied with Propagate enabled at path `/`.
 - **HA monitoring:** Only relevant if PVE HA is configured. If no HA resources exist, discovery returns nothing.
 - **CPU temperatures:** Not available through the PVE REST API. Requires an agent or custom script.
