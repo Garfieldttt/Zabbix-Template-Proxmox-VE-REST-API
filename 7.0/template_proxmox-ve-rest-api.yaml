@@ -1701,7 +1701,7 @@ zabbix_export:
                 - uuid: ff83e8f239e246b0a1c385029fe3941d
                   expression: |
                     min(/Template Proxmox VE REST API/lxc.status[{#VMID}],900)=0
-                    and {$ENABLE_VM_STOP_ALERT:"{#VMID}"}=1 and max(/Template Proxmox VE REST API/lxc.status[{#VMID}],24h)=1
+                    and {$ENABLE_VM_STOP_ALERT:"{#VMID}"}=1 and min(/Template Proxmox VE REST API/lxc.status[{#VMID}],24h)=1
                   recovery_mode: RECOVERY_EXPRESSION
                   recovery_expression: 'last(/Template Proxmox VE REST API/lxc.status[{#VMID}])=1'
                   name: 'LXC {#VMID} status is stopped'
@@ -2448,7 +2448,7 @@ zabbix_export:
                   value: '{#VMID}'
               trigger_prototypes:
                 - uuid: ac085aa97edb40dcb08272e859a39e36
-                  expression: 'max(/Template Proxmox VE REST API/vm.status[{#VMID}],900)=0 and {$ENABLE_VM_STOP_ALERT:"{#VMID}"}=1 and max(/Template Proxmox VE REST API/vm.status[{#VMID}],24h)=1'
+                  expression: 'max(/Template Proxmox VE REST API/vm.status[{#VMID}],900)=0 and {$ENABLE_VM_STOP_ALERT:"{#VMID}"}=1 and min(/Template Proxmox VE REST API/vm.status[{#VMID}],24h)=1'
                   name: 'VM {#VMID} status is stopped'
                   priority: HIGH
                   description: |
