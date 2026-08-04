@@ -1931,7 +1931,10 @@ zabbix_export:
                   value: '{#IFACE}'
               trigger_prototypes:
                 - uuid: 9ad045fbeefa4b9db50fdae75cce9a9f
-                  expression: 'last(/Template Proxmox VE REST API/iface.active[{#IFACE}])=0'
+                  expression: |
+                    last(/Template Proxmox VE REST API/iface.active[{#IFACE}])=0
+                    and max(/Template Proxmox VE REST API/iface.active[{#IFACE}],24h)=1
+                    and last(/Template Proxmox VE REST API/iface.active[{#IFACE}],#1:now-24h)=1
                   name: 'Network interface {#IFACE} is down on {HOST.NAME}'
                   priority: WARNING
                   description: 'Host network interface {#IFACE} is no longer active/up.'
