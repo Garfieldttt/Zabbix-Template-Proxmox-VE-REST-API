@@ -1906,7 +1906,11 @@ zabbix_export:
               - macro: '{#IFACE_TYPE}'
                 value: '^(bridge|bond|eth|en|vlan).*'
                 formulaid: A
-          description: 'Discovers host network interfaces from /nodes/{node}/network. Filters to relevant types (bridge, bond, eth/en*, vlan).'
+              - macro: '{#IFACE}'
+                value: '{$IFACE.NOT_MATCHES}'
+                operator: NOT_MATCHES_REGEX
+                formulaid: B
+          description: 'Discovers host network interfaces from /nodes/{node}/network. Filters to relevant types (bridge, bond, eth/en*, vlan) and excludes the interface names matching {$IFACE.NOT_MATCHES}, which by default drops the per-guest interfaces Proxmox creates for VMs and containers.'
           item_prototypes:
             - uuid: 6ab6551bf8354a489ebbc4bb8281b9cf
               name: 'Network interface {#IFACE} active'
@@ -1931,19 +1935,19 @@ zabbix_export:
                   value: '{#IFACE}'
               trigger_prototypes:
                 - uuid: 9ad045fbeefa4b9db50fdae75cce9a9f
-                  expression: 'last(/Template Proxmox VE REST API/iface.active[{#IFACE}])=0 and (last(/Template Proxmox VE REST API/iface.autostart[{#IFACE}])=1 or max(/Template Proxmox VE REST API/iface.active[{#IFACE}],{$IFACE.ACTIVE.WINDOW})=1)'
+                  expression: 'last(/Template Proxmox VE REST API/iface.active[{#IFACE}])=0 and last(/Template Proxmox VE REST API/iface.autostart[{#IFACE}])=1 and max(/Template Proxmox VE REST API/iface.active[{#IFACE}],{$IFACE.ACTIVE.WINDOW})=1'
                   recovery_mode: RECOVERY_EXPRESSION
                   recovery_expression: 'last(/Template Proxmox VE REST API/iface.active[{#IFACE}])=1'
                   name: 'Network interface {#IFACE} is down on {HOST.NAME}'
                   priority: WARNING
-                  description: 'Host network interface {#IFACE} is no longer active/up. Only fires if the interface is configured for autostart, or was active at least once within {$IFACE.ACTIVE.WINDOW}. Interfaces that were never up and are not configured for autostart are ignored.'
+                  description: 'Host network interface {#IFACE} is no longer active/up. All three conditions must hold: the interface is down, it is configured to start automatically, and it was active at least once within {$IFACE.ACTIVE.WINDOW}. Interfaces that are configured but were never actually up do not raise this trigger.'
                   manual_close: 'YES'
             - uuid: 9a5222d23474453985777d17eb16a70f
               name: 'Network interface {#IFACE} autostart'
               type: DEPENDENT
               key: 'iface.autostart[{#IFACE}]'
               delay: '0'
-              description: 'Configured admin state of network interface {#IFACE}. 1 = the interface has an "auto" entry in /etc/network/interfaces and is expected to be up, 0 = not configured for automatic start or field not reported by the API.'
+              description: 'Configured admin state of network interface {#IFACE}. 1 = the interface has an "auto" entry in /etc/network/interfaces and is expected to be up, 0 = not configured for automatic start. If the API does not report the field at all the item falls back to 1, so that the interface down trigger keeps working and is decided by the activity condition alone.'
               valuemap:
                 name: 'Network interface autostart'
               preprocessing:
@@ -1951,7 +1955,7 @@ zabbix_export:
                   parameters:
                     - '$.data[?(@.iface=="{#IFACE}")].autostart.first()'
                   error_handler: CUSTOM_VALUE
-                  error_handler_params: '0'
+                  error_handler_params: '1'
                 - type: DISCARD_UNCHANGED_HEARTBEAT
                   parameters:
                     - 1h
@@ -3168,7 +3172,10 @@ zabbix_export:
           description: 'To enable this trigger set to 1, to disable alerts on this trigger set value to 0'
         - macro: '{$IFACE.ACTIVE.WINDOW}'
           value: 7d
-          description: 'Fallback lookback window for the network interface down trigger, used when the API does not report an autostart flag for the interface. The interface must have been active at least once within this period, otherwise it is treated as never used and ignored. The value must include a time unit (e.g. 7d, 24h).'
+          description: 'Lookback window for the network interface down trigger. The interface must have been active at least once within this period, otherwise it is treated as configured but never used and does not alert. The value must include a time unit (e.g. 7d, 24h).'
+        - macro: '{$IFACE.NOT_MATCHES}'
+          value: '^(tap|veth|fwbr|fwpr|fwln)'
+          description: 'LLD filter: host network interface names to exclude (regex). The default drops the per-guest interfaces Proxmox creates for VMs and containers, which appear and disappear together with the guest.'
         - macro: '{$LXC.CPU.HIGH}'
           value: '99'
           description: 'Critical threshold for LXC CPU utilization (%) over 5 minutes.'
