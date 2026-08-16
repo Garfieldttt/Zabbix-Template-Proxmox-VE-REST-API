@@ -119,15 +119,15 @@ Set to `0` to suppress a trigger globally. Supports context macros for per-insta
 
 | Rule | Source | Discovers |
 |------|--------|-----------|
-| `discover.lxc` | `/nodes/{node}/lxc` | LXC containers with CPU, memory, disk, network metrics |
-| `discover.qemu` | `/nodes/{node}/qemu` | QEMU/KVM VMs with CPU, memory, disk, network metrics |
+| `discover.lxc` | `/cluster/resources` | LXC containers on every node, with CPU, memory, disk, network metrics |
+| `discover.qemu` | `/cluster/resources` | QEMU/KVM VMs on every node, with CPU, memory, disk, network metrics |
 | `discover.nodes` | `/nodes` | Cluster nodes with status and uptime |
 | `discover.storage` | `/nodes/{node}/storage` | Storage pools with capacity and active status |
 | `discover.backup` | `/nodes/{node}/tasks` | Backup jobs (vzdump/PBS), grouped by VM, most recent run |
 | `discover.tasks` | `/nodes/{node}/tasks` | Non-backup tasks, deduplicated per type |
 | `discover.users` | `/access/users` | PVE user accounts with expiration monitoring |
 | `discover.network` | `/nodes/{node}/network` | Host network interfaces (bridge, bond, eth, vlan) |
-| `discover.ha.resources` | `/cluster/ha/resources` | HA-protected VMs and containers |
+| `discover.ha.resources` | `/cluster/ha/status/current` | HA-protected VMs and containers |
 | `discover.disks` | `/nodes/{node}/disks/list` | Physical disks with SMART health and wearout |
 
 ---
@@ -204,9 +204,12 @@ The template includes a pre-built dashboard **"Proxmox VE - Monitoring Dashboard
 
 ## 7. Notes
 
+- **Cluster support:** Guest discovery and all guest metrics come from `/cluster/resources`, so VMs and containers on every node are monitored from a single Zabbix host and a live migration does not break their items. Each guest carries a `{#NODE}` macro and a `Node of <vmid>` item, and an informational trigger fires when that value changes. Five guest values are not part of `/cluster/resources` and are still read from the node given by `{$PVE_NODE}`: QEMU balloon size, balloon minimum and machine type, plus LXC swap and maximum swap. For guests on other nodes these five stay empty instead of turning unsupported.
+- **Node-scoped data:** Disks, host network interfaces, storage, tasks, time, version and host status are read per node from `{$PVE_NODE}`. To monitor several nodes in that depth, add one Zabbix host per PVE node with its own `{$PVE_NODE}`.
 - **Single-node without cluster:** Fully supported. `pve.cluster.quorum` returns `1` and `pve.cluster.name` returns `standalone`, the quorum-lost trigger will not fire.
 - **Disk monitoring:** Requires `Sys.Audit` privilege. If disk items show "not supported", check that the API token role is applied with Propagate enabled at path `/`.
-- **HA monitoring:** Only relevant if PVE HA is configured. If no HA resources exist, discovery returns nothing.
+- **HA monitoring:** Only relevant if PVE HA is configured. If no HA resources exist, discovery returns nothing and the rule stays supported. HA data is read from `/cluster/ha/status/current`, which carries the CRM master status and one entry per HA-managed service. The plain `/cluster/ha/status` path is a directory index only and returns no status data.
+- **SSD wearout:** Read from `/nodes/{node}/disks/list`, not from the SMART endpoint, which does not return this value. Disks that report a non-numeric wearout, such as rotating disks, are discarded instead of turning the item unsupported.
 - **CPU temperatures:** Not available through the PVE REST API. Requires an agent or custom script.
 
 ---
