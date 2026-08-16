@@ -517,13 +517,16 @@ zabbix_export:
           delay: '0'
           value_type: CHAR
           trends: '0'
-          description: 'Current status of the HA manager (e.g. active, maintenance). Source: /cluster/ha/status → manager_status.status.'
+          description: 'Status of the HA manager (CRM master), for example active or wait_for_quorum. Source: /cluster/ha/status/current, entry with type=master. Returns "unknown" when HA is not configured on this cluster.'
           preprocessing:
             - type: JSONPATH
               parameters:
-                - $.data.manager_status.status
+                - '$.data[?(@.type=="master")].status.first()'
               error_handler: CUSTOM_VALUE
               error_handler_params: unknown
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
           master_item:
             key: pve.ha.raw
           tags:
@@ -537,8 +540,8 @@ zabbix_export:
           history: '0'
           value_type: TEXT
           trends: '0'
-          description: 'Master item. Raw JSON from /cluster/ha/status. Used for HA manager and resource state monitoring.'
-          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/cluster/ha/status'
+          description: 'Master item. Raw JSON from /cluster/ha/status/current. Contains one entry per quorum, CRM master, LRM and HA-managed service. Used for HA manager status and HA resource discovery. Note that /cluster/ha/status without /current is only a directory index and carries no status data.'
+          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/cluster/ha/status/current'
           headers:
             - name: Authorization
               value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
@@ -696,6 +699,7 @@ zabbix_export:
             - type: JSONPATH
               parameters:
                 - $.data.cpuinfo.mhz
+              error_handler: DISCARD_VALUE
           master_item:
             key: pve.status
           tags:
@@ -1278,24 +1282,24 @@ zabbix_export:
                   value: '{#DISK_DEV}'
             - uuid: 11439521679e47f8a1e96261a5e98e4d
               name: 'Disk {#DISK_DEV} wearout'
-              type: HTTP_AGENT
+              type: DEPENDENT
               key: 'disk.wearout[{#DISK_DEV}]'
-              delay: '3600'
+              delay: '0'
               value_type: FLOAT
               trends: '0'
               units: '%'
-              description: 'SSD wearout indicator for disk {#DISK_DEV} in percent remaining life (100% = new, 0% = worn out). Only meaningful for SSDs/NVMe. Source: /nodes/{node}/disks/smart.'
+              description: 'SSD wearout indicator for disk {#DISK_DEV} in percent remaining life (100% = new, 0% = worn out). Only meaningful for SSDs and NVMe, rotating disks report N/A and are discarded. Source: /nodes/{node}/disks/list. The SMART endpoint does not return this value.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - $.data.wearout
+                    - '$.data[?(@.devpath=="{#DISK_DEV}")].wearout.first()'
                   error_handler: DISCARD_VALUE
-              url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/disks/smart?disk={#DISK_DEV}'
-              headers:
-                - name: Authorization
-                  value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-                - name: Accept
-                  value: application/json
+                - type: MATCHES_REGEX
+                  parameters:
+                    - '^[0-9]+(\.[0-9]+)?$'
+                  error_handler: DISCARD_VALUE
+              master_item:
+                key: pve.disks.raw
               tags:
                 - tag: PVE
                   value: Disk
@@ -1321,31 +1325,27 @@ zabbix_export:
                 - '$.data[*]'
         - uuid: 235e7e42e382487085fdf54efa040b65
           name: 'Discover HA resources'
-          type: HTTP_AGENT
+          type: DEPENDENT
           key: discover.ha.resources
-          delay: '300'
-          description: 'Discovers HA-managed resources (VMs/LXC) from /cluster/ha/resources.'
+          delay: '0'
+          description: 'Discovers HA-managed resources (VMs and containers) from the service entries of /cluster/ha/status/current. Discovers nothing when HA is not configured, without turning the rule unsupported.'
           item_prototypes:
             - uuid: 1c9ba7d377414184b53b3ed14b57ef26
               name: 'HA state of {#HA_SID}'
-              type: HTTP_AGENT
+              type: DEPENDENT
               key: 'ha.resource.state[{#HA_SID}]'
-              delay: '60'
+              delay: '0'
               value_type: CHAR
               trends: '0'
-              description: 'Current HA state of resource {#HA_SID} (e.g. started, stopped, error, freeze, ignored). Source: /cluster/ha/resources/{sid}.'
+              description: 'Current HA state of resource {#HA_SID} as reported by the CRM, for example started, stopped, error, freeze or ignored. Source: /cluster/ha/status/current, service entry for this SID. Returns "unknown" while the resource is not present in the HA status.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - $.data.state
+                    - '$.data[?(@.sid=="{#HA_SID}")].state.first()'
                   error_handler: CUSTOM_VALUE
                   error_handler_params: unknown
-              url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/cluster/ha/resources/{#HA_SID}'
-              headers:
-                - name: Authorization
-                  value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-                - name: Accept
-                  value: application/json
+              master_item:
+                key: pve.ha.raw
               tags:
                 - tag: PVE
                   value: HA
@@ -1356,23 +1356,33 @@ zabbix_export:
                   expression: 'last(/Template Proxmox VE REST API/ha.resource.state[{#HA_SID}])="error"'
                   name: 'HA resource {#HA_SID} is in error state'
                   priority: HIGH
-                  description: 'The HA-managed resource {#HA_SID} has entered error state. Check PVE HA log for details.'
+                  description: 'The HA-managed resource {#HA_SID} has entered error state. Check the PVE HA log for details.'
                   manual_close: 'YES'
-          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/cluster/ha/resources'
-          headers:
-            - name: Authorization
-              value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-            - name: Accept
-              value: application/json
+          master_item:
+            key: pve.ha.raw
           lld_macro_paths:
             - lld_macro: '{#HA_SID}'
               path: $.sid
             - lld_macro: '{#HA_TYPE}'
-              path: $.type
+              path: $.ha_type
           preprocessing:
-            - type: JSONPATH
+            - type: JAVASCRIPT
               parameters:
-                - '$.data[*]'
+                - |
+                  // Keep only the service entries and expose the resource type (vm or ct) from the SID.
+                  try {
+                    var d = JSON.parse(value).data;
+                    if (!d || !Array.isArray(d)) return '[]';
+                    var out = [];
+                    for (var i = 0; i < d.length; i++) {
+                      if (d[i].type !== 'service' || !d[i].sid) continue;
+                      var parts = String(d[i].sid).split(':');
+                      out.push({ sid: d[i].sid, ha_type: parts.length > 1 ? parts[0] : '' });
+                    }
+                    return JSON.stringify(out);
+                  } catch (e) {
+                    return '[]';
+                  }
         - uuid: 553940a5f79343cbb87e6eef7f446131
           name: 'Discover lxc'
           type: DEPENDENT
@@ -1388,16 +1398,17 @@ zabbix_export:
               delay: '0'
               value_type: FLOAT
               units: '%'
-              description: 'CPU utilization of LXC container {#VMID} in percent (0-100). Source: /nodes/{node}/lxc → data[vmid].cpu * 100.'
+              description: 'CPU utilization of LXC container {#VMID} in percent (0-100). Source: /cluster/resources -> entry with type=lxc and this vmid, field cpu.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].cpu.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="lxc")].cpu.first()'
+                  error_handler: DISCARD_VALUE
                 - type: MULTIPLIER
                   parameters:
                     - '100'
               master_item:
-                key: pve.nodes.lxc.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: LXC-Container
                   value: CPU
@@ -1426,13 +1437,13 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].diskread.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="lxc")].diskread.first()'
                   error_handler: DISCARD_VALUE
                 - type: CHANGE_PER_SECOND
                   parameters:
                     - ''
               master_item:
-                key: pve.nodes.lxc.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: LXC-Container
                   value: Disk
@@ -1449,13 +1460,13 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].diskwrite.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="lxc")].diskwrite.first()'
                   error_handler: DISCARD_VALUE
                 - type: CHANGE_PER_SECOND
                   parameters:
                     - ''
               master_item:
-                key: pve.nodes.lxc.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: LXC-Container
                   value: Disk
@@ -1467,13 +1478,14 @@ zabbix_export:
               key: 'lxc.disk[{#VMID}]'
               delay: '0'
               units: Bytes
-              description: 'Disk space used by LXC container {#VMID} in bytes (rootfs usage). Source: /nodes/{node}/lxc → data[vmid].disk.'
+              description: 'Disk space used by LXC container {#VMID} in bytes (rootfs usage). Source: /cluster/resources -> entry with type=lxc and this vmid, field disk.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].disk.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="lxc")].disk.first()'
+                  error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.lxc.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: LXC-Container
                   value: Disk
@@ -1485,13 +1497,14 @@ zabbix_export:
               key: 'lxc.maxdisk[{#VMID}]'
               delay: '0'
               units: Bytes
-              description: 'Total disk size allocated to LXC container {#VMID} in bytes. Source: /nodes/{node}/lxc → data[vmid].maxdisk.'
+              description: 'Total disk size allocated to LXC container {#VMID} in bytes. Source: /cluster/resources -> entry with type=lxc and this vmid, field maxdisk.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].maxdisk.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="lxc")].maxdisk.first()'
+                  error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.lxc.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: LXC-Container
                   value: Disk
@@ -1503,13 +1516,14 @@ zabbix_export:
               key: 'lxc.maxmem[{#VMID}]'
               delay: '0'
               units: Bytes
-              description: 'Maximum memory allocated to LXC container {#VMID} in bytes. Source: /nodes/{node}/lxc → data[vmid].maxmem.'
+              description: 'Maximum memory allocated to LXC container {#VMID} in bytes. Source: /cluster/resources -> entry with type=lxc and this vmid, field maxmem.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].maxmem.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="lxc")].maxmem.first()'
+                  error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.lxc.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: LXC-Container
                   value: Memory
@@ -1521,11 +1535,12 @@ zabbix_export:
               key: 'lxc.maxswap[{#VMID}]'
               delay: '0'
               units: Bytes
-              description: 'Maximum swap space allocated to LXC container {#VMID} in bytes. Source: /nodes/{node}/lxc → data[vmid].maxswap.'
+              description: 'Maximum swap space allocated to LXC container {#VMID} in bytes. Source: /nodes/{node}/lxc, field maxswap. Only collected for containers running on the node given by {$PVE_NODE}, because /cluster/resources does not carry swap values.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
                     - '$.data[?(@.vmid=={#VMID})].maxswap.first()'
+                  error_handler: DISCARD_VALUE
               master_item:
                 key: pve.nodes.lxc.raw
               tags:
@@ -1539,13 +1554,14 @@ zabbix_export:
               key: 'lxc.memusage[{#VMID}]'
               delay: '0'
               units: Bytes
-              description: 'Current memory usage of LXC container {#VMID} in bytes. Source: /nodes/{node}/lxc → data[vmid].mem.'
+              description: 'Current memory usage of LXC container {#VMID} in bytes. Source: /cluster/resources -> entry with type=lxc and this vmid, field mem.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].mem.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="lxc")].mem.first()'
+                  error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.lxc.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: LXC-Container
                   value: Memory
@@ -1572,13 +1588,15 @@ zabbix_export:
               delay: '0'
               value_type: CHAR
               trends: '0'
-              description: 'Hostname/name of LXC container {#VMID}. Source: /nodes/{node}/lxc → data[vmid].name.'
+              description: 'Hostname/name of LXC container {#VMID}. Source: /cluster/resources -> entry with type=lxc and this vmid, field name.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].name.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="lxc")].name.first()'
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: '{#VM_NAME}'
               master_item:
-                key: pve.nodes.lxc.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: LXC-Container
                   value: Name
@@ -1594,13 +1612,13 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].netin.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="lxc")].netin.first()'
                   error_handler: DISCARD_VALUE
                 - type: SIMPLE_CHANGE
                   parameters:
                     - ''
               master_item:
-                key: pve.nodes.lxc.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: LXC-Container
                   value: Network
@@ -1616,10 +1634,10 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].netin.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="lxc")].netin.first()'
                   error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.lxc.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: LXC-Container
                   value: Network
@@ -1635,13 +1653,13 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].netout.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="lxc")].netout.first()'
                   error_handler: DISCARD_VALUE
                 - type: SIMPLE_CHANGE
                   parameters:
                     - ''
               master_item:
-                key: pve.nodes.lxc.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: LXC-Container
                   value: Network
@@ -1657,10 +1675,10 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].netout.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="lxc")].netout.first()'
                   error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.lxc.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: LXC-Container
                   value: Network
@@ -1671,13 +1689,14 @@ zabbix_export:
               type: DEPENDENT
               key: 'lxc.status[{#VMID}]'
               delay: '0'
-              description: 'Runtime status of LXC container {#VMID}. 0 = stopped, 1 = running, 2 = paused. Source: /nodes/{node}/lxc → data[vmid].status.'
+              description: 'Runtime status of LXC container {#VMID}. 0 = stopped, 1 = running, 2 = paused. Source: /cluster/resources -> entry with type=lxc and this vmid, field status.'
               valuemap:
                 name: 'VM  and LXC status'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].status.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="lxc")].status.first()'
+                  error_handler: DISCARD_VALUE
                 - type: STR_REPLACE
                   parameters:
                     - stopped
@@ -1691,7 +1710,7 @@ zabbix_export:
                     - paused
                     - '2'
               master_item:
-                key: pve.nodes.lxc.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: LXC-Container
                   value: Status
@@ -1717,11 +1736,12 @@ zabbix_export:
               key: 'lxc.swap[{#VMID}]'
               delay: '0'
               units: Bytes
-              description: 'Current swap usage of LXC container {#VMID} in bytes. Source: /nodes/{node}/lxc → data[vmid].swap.'
+              description: 'Current swap usage of LXC container {#VMID} in bytes. Source: /nodes/{node}/lxc, field swap. Only collected for containers running on the node given by {$PVE_NODE}, because /cluster/resources does not carry swap values.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
                     - '$.data[?(@.vmid=={#VMID})].swap.first()'
+                  error_handler: DISCARD_VALUE
               master_item:
                 key: pve.nodes.lxc.raw
               tags:
@@ -1736,13 +1756,14 @@ zabbix_export:
               delay: '0'
               value_type: FLOAT
               units: s
-              description: 'Uptime of LXC container {#VMID} in seconds since last start. Source: /nodes/{node}/lxc → data[vmid].uptime.'
+              description: 'Uptime of LXC container {#VMID} in seconds since last start. Source: /cluster/resources -> entry with type=lxc and this vmid, field uptime.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].uptime.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="lxc")].uptime.first()'
+                  error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.lxc.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: LXC-Container
                   value: Uptime
@@ -1753,18 +1774,49 @@ zabbix_export:
               type: DEPENDENT
               key: 'lxc.vcpu[{#VMID}]'
               delay: '0'
-              description: 'Number of vCPUs assigned to LXC container {#VMID}. Source: /nodes/{node}/lxc → data[vmid].cpus.'
+              description: 'Number of vCPUs assigned to LXC container {#VMID}. Source: /cluster/resources -> entry with type=lxc and this vmid, field cpus.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].cpus.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="lxc")].maxcpu.first()'
+                  error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.lxc.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: LXC-Container
                   value: CPU
                 - tag: LXC-Container
                   value: '{#VMID}'
+            - uuid: 76d6224657f04293aec967ec29938c07
+              name: 'Node of {#VMID}'
+              type: DEPENDENT
+              key: 'lxc.node[{#VMID}]'
+              delay: '0'
+              value_type: CHAR
+              trends: '0'
+              description: 'Cluster node the LXC container is currently running on. Changes when the guest is migrated. Source: /cluster/resources -> entry with type=lxc and this vmid, field node.'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="lxc")].node.first()'
+                  error_handler: DISCARD_VALUE
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              master_item:
+                key: pve.cluster.resources.raw
+              tags:
+                - tag: PVE
+                  value: LXC
+                - tag: PVE
+                  value: '{#VMID}'
+              trigger_prototypes:
+                - uuid: 5609a6c57fb342308e04beab00d469ee
+                  expression: 'change(/Template Proxmox VE REST API/lxc.node[{#VMID}])<>0'
+                  name: 'LXC {#VMID} has been migrated to another node'
+                  priority: INFO
+                  description: 'The cluster node running LXC {#VMID} changed since the previous check, which indicates a migration.'
+                  manual_close: 'YES'
           trigger_prototypes:
             - uuid: 2dc3bee99506415d9461edbbdb9ce115
               expression: 'last(/Template Proxmox VE REST API/lxc.status[{#VMID}])=1 and last(/Template Proxmox VE REST API/lxc.uptime[{#VMID}])<600'
@@ -1883,18 +1935,20 @@ zabbix_export:
                     host: 'Template Proxmox VE REST API'
                     key: 'lxc.maxmem[{#VMID}]'
           master_item:
-            key: pve.nodes.lxc.raw
+            key: pve.cluster.resources.raw
           lld_macro_paths:
-            - lld_macro: '{#TYPE}'
-              path: $.type
             - lld_macro: '{#VMID}'
               path: $.vmid
             - lld_macro: '{#VM_NAME}'
               path: $.name
+            - lld_macro: '{#NODE}'
+              path: $.node
+            - lld_macro: '{#TEMPLATE}'
+              path: $.template
           preprocessing:
             - type: JSONPATH
               parameters:
-                - '$.data[*]'
+                - '$.data[?(@.type=="lxc")]'
         - uuid: cdcb64618a174622909398a4c3f2d5d1
           name: 'Discover network interfaces'
           type: DEPENDENT
@@ -1955,7 +2009,7 @@ zabbix_export:
                   parameters:
                     - '$.data[?(@.iface=="{#IFACE}")].autostart.first()'
                   error_handler: CUSTOM_VALUE
-                  error_handler_params: '1'
+                  error_handler_params: '0'
                 - type: DISCARD_UNCHANGED_HEARTBEAT
                   parameters:
                     - 1h
@@ -2174,16 +2228,17 @@ zabbix_export:
               delay: '0'
               value_type: FLOAT
               units: '%'
-              description: 'CPU utilization of VM {#VMID} in percent (0-100). Source: /nodes/{node}/qemu → data[vmid].cpu * 100.'
+              description: 'CPU utilization of VM {#VMID} in percent (0-100). Source: /cluster/resources -> entry with type=qemu and this vmid, field cpu.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].cpu.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="qemu")].cpu.first()'
+                  error_handler: DISCARD_VALUE
                 - type: MULTIPLIER
                   parameters:
                     - '100'
               master_item:
-                key: pve.nodes.qemu.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: QEMU/KVM-VMs
                   value: CPU
@@ -2220,13 +2275,13 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].diskread.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="qemu")].diskread.first()'
                   error_handler: DISCARD_VALUE
                 - type: CHANGE_PER_SECOND
                   parameters:
                     - ''
               master_item:
-                key: pve.nodes.qemu.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: QEMU/KVM-VMs
                   value: Disk
@@ -2243,13 +2298,13 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].diskwrite.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="qemu")].diskwrite.first()'
                   error_handler: DISCARD_VALUE
                 - type: CHANGE_PER_SECOND
                   parameters:
                     - ''
               master_item:
-                key: pve.nodes.qemu.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: QEMU/KVM-VMs
                   value: Disk
@@ -2283,13 +2338,14 @@ zabbix_export:
               key: 'vm.maxmem[{#VMID}]'
               delay: '0'
               units: Bytes
-              description: 'Maximum memory allocated to VM {#VMID} in bytes. Source: /nodes/{node}/qemu → data[vmid].maxmem.'
+              description: 'Maximum memory allocated to VM {#VMID} in bytes. Source: /cluster/resources -> entry with type=qemu and this vmid, field maxmem.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].maxmem.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="qemu")].maxmem.first()'
+                  error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.qemu.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: QEMU/KVM-VMs
                   value: Memory
@@ -2301,13 +2357,14 @@ zabbix_export:
               key: 'vm.memusage[{#VMID}]'
               delay: '0'
               units: Bytes
-              description: 'Current memory usage of VM {#VMID} in bytes (requires QEMU guest agent or ballooning). Source: /nodes/{node}/qemu → data[vmid].mem.'
+              description: 'Current memory usage of VM {#VMID} in bytes (requires QEMU guest agent or ballooning). Source: /cluster/resources -> entry with type=qemu and this vmid, field mem.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].mem.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="qemu")].mem.first()'
+                  error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.qemu.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: QEMU/KVM-VMs
                   value: Memory
@@ -2334,13 +2391,15 @@ zabbix_export:
               delay: '0'
               value_type: CHAR
               trends: '0'
-              description: 'Name of VM {#VMID}. Source: /nodes/{node}/qemu → data[vmid].name.'
+              description: 'Name of VM {#VMID}. Source: /cluster/resources -> entry with type=qemu and this vmid, field name.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].name.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="qemu")].name.first()'
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: '{#VM_NAME}'
               master_item:
-                key: pve.nodes.qemu.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: QEMU/KVM-VMs
                   value: '{#VMID}'
@@ -2354,13 +2413,13 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].netin.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="qemu")].netin.first()'
                   error_handler: DISCARD_VALUE
                 - type: SIMPLE_CHANGE
                   parameters:
                     - ''
               master_item:
-                key: pve.nodes.qemu.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: QEMU/KVM-VMs
                   value: Network
@@ -2376,10 +2435,10 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].netin.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="qemu")].netin.first()'
                   error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.qemu.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: QEMU/KVM-VMs
                   value: Network
@@ -2395,13 +2454,13 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].netout.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="qemu")].netout.first()'
                   error_handler: DISCARD_VALUE
                 - type: SIMPLE_CHANGE
                   parameters:
                     - ''
               master_item:
-                key: pve.nodes.qemu.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: QEMU/KVM-VMs
                   value: Network
@@ -2413,14 +2472,14 @@ zabbix_export:
               key: 'vm.netout[{#VMID}]'
               delay: '0'
               units: Bytes
-              description: 'Cumulative network bytes transmitted by VM {#VMID} since last start. Source: /nodes/{node}/qemu → data[vmid].netout.'
+              description: 'Cumulative network bytes transmitted by VM {#VMID} since last start. Source: /cluster/resources -> entry with type=qemu and this vmid, field netout.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].netout.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="qemu")].netout.first()'
                   error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.qemu.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: QEMU/KVM-VMs
                   value: Network
@@ -2433,13 +2492,14 @@ zabbix_export:
               delay: '0'
               value_type: FLOAT
               units: Bytes
-              description: 'Total size of the primary boot disk of VM {#VMID} in bytes. Source: /nodes/{node}/qemu → data[vmid].maxdisk. Note: actual disk usage requires guest agent.'
+              description: 'Total size of the primary boot disk of VM {#VMID} in bytes. Source: /cluster/resources -> entry with type=qemu and this vmid, field maxdisk. Note: actual disk usage requires guest agent.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].maxdisk.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="qemu")].maxdisk.first()'
+                  error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.qemu.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: QEMU/KVM-VMs
                   value: Disk
@@ -2450,13 +2510,14 @@ zabbix_export:
               type: DEPENDENT
               key: 'vm.status[{#VMID}]'
               delay: '0'
-              description: 'Runtime status of VM {#VMID}. 0 = stopped, 1 = running, 2 = paused. Source: /nodes/{node}/qemu → data[vmid].status.'
+              description: 'Runtime status of VM {#VMID}. 0 = stopped, 1 = running, 2 = paused. Source: /cluster/resources -> entry with type=qemu and this vmid, field status.'
               valuemap:
                 name: 'VM  and LXC status'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].status.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="qemu")].status.first()'
+                  error_handler: DISCARD_VALUE
                 - type: STR_REPLACE
                   parameters:
                     - stopped
@@ -2470,7 +2531,7 @@ zabbix_export:
                     - paused
                     - '2'
               master_item:
-                key: pve.nodes.qemu.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: QEMU/KVM-VMs
                   value: Status
@@ -2493,13 +2554,14 @@ zabbix_export:
               delay: '0'
               value_type: FLOAT
               units: s
-              description: 'Uptime of VM {#VMID} in seconds since last start. Source: /nodes/{node}/qemu → data[vmid].uptime.'
+              description: 'Uptime of VM {#VMID} in seconds since last start. Source: /cluster/resources -> entry with type=qemu and this vmid, field uptime.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].uptime.first()'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="qemu")].uptime.first()'
+                  error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.qemu.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: QEMU/KVM-VMs
                   value: Uptime
@@ -2510,11 +2572,12 @@ zabbix_export:
               type: DEPENDENT
               key: 'vm.vcpu[{#VMID}]'
               delay: '0'
-              description: 'Number of vCPUs assigned to VM {#VMID}. Source: /nodes/{node}/qemu → data[vmid].cpus.'
+              description: 'Number of vCPUs assigned to VM {#VMID}. Source: /cluster/resources -> entry with type=qemu and this vmid, field cpus.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].cpus'
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="qemu")].maxcpu.first()'
+                  error_handler: DISCARD_VALUE
                 - type: LTRIM
                   parameters:
                     - '["'
@@ -2522,12 +2585,42 @@ zabbix_export:
                   parameters:
                     - '"]'
               master_item:
-                key: pve.nodes.qemu.raw
+                key: pve.cluster.resources.raw
               tags:
                 - tag: QEMU/KVM-VMs
                   value: CPU
                 - tag: QEMU/KVM-VMs
                   value: '{#VMID}'
+            - uuid: d5d1d8eb64244dbab48feca0fae0ff48
+              name: 'Node of {#VMID}'
+              type: DEPENDENT
+              key: 'vm.node[{#VMID}]'
+              delay: '0'
+              value_type: CHAR
+              trends: '0'
+              description: 'Cluster node the VM is currently running on. Changes when the guest is migrated. Source: /cluster/resources -> entry with type=qemu and this vmid, field node.'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.data[?(@.vmid=={#VMID} && @.type=="qemu")].node.first()'
+                  error_handler: DISCARD_VALUE
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              master_item:
+                key: pve.cluster.resources.raw
+              tags:
+                - tag: PVE
+                  value: VM
+                - tag: PVE
+                  value: '{#VMID}'
+              trigger_prototypes:
+                - uuid: 0906752ddc0b419593430b655042ce2f
+                  expression: 'change(/Template Proxmox VE REST API/vm.node[{#VMID}])<>0'
+                  name: 'VM {#VMID} has been migrated to another node'
+                  priority: INFO
+                  description: 'The cluster node running VM {#VMID} changed since the previous check, which indicates a migration.'
+                  manual_close: 'YES'
           trigger_prototypes:
             - uuid: 4b7ca0a0681a43a4a10eb0647292cc90
               expression: 'last(/Template Proxmox VE REST API/vm.status[{#VMID}])=1 and last(/Template Proxmox VE REST API/vm.uptime[{#VMID}])<600'
@@ -2614,18 +2707,20 @@ zabbix_export:
                     host: 'Template Proxmox VE REST API'
                     key: 'vm.status[{#VMID}]'
           master_item:
-            key: pve.nodes.qemu.raw
+            key: pve.cluster.resources.raw
           lld_macro_paths:
-            - lld_macro: '{#TYPE}'
-              path: $.type
             - lld_macro: '{#VMID}'
               path: $.vmid
             - lld_macro: '{#VM_NAME}'
               path: $.name
+            - lld_macro: '{#NODE}'
+              path: $.node
+            - lld_macro: '{#TEMPLATE}'
+              path: $.template
           preprocessing:
             - type: JSONPATH
               parameters:
-                - '$.data[*]'
+                - '$.data[?(@.type=="qemu")]'
         - uuid: 14efa82386b54af18a8e26377422dd57
           name: 'Discover storage'
           type: DEPENDENT
