@@ -3668,7 +3668,7 @@ zabbix_export:
           value: root@pam
           description: 'The Proxmox VE username (including realm, e.g. "root@pam") for API authentication.'
         - macro: '{$PVE_IP}'
-          value: localhost
+          value: 192.168.10.222
           description: 'The IP address or hostname of the Proxmox VE API server.'
         - macro: '{$PVE_NODE}'
           value: pve
