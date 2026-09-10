@@ -960,24 +960,6 @@ zabbix_export:
           tags:
             - tag: PVE
               value: CPU
-        - uuid: 56a5d7af7e034c53941a3ba7f64fff65
-          name: 'PVE lxc raw'
-          type: HTTP_AGENT
-          key: pve.nodes.lxc.raw
-          delay: '300'
-          history: '0'
-          value_type: TEXT
-          trends: '0'
-          description: 'Master item. Raw JSON from /nodes/{node}/lxc. Used as source for all LXC container dependent items and discovery rules.'
-          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/lxc'
-          headers:
-            - name: Authorization
-              value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-            - name: Accept
-              value: application/json
-          tags:
-            - tag: PVE
-              value: Raw
         - uuid: 34f01ffa2b17450490d7015da7759c17
           name: 'PVE network raw'
           type: HTTP_AGENT
@@ -996,24 +978,6 @@ zabbix_export:
           tags:
             - tag: PVE
               value: Network
-        - uuid: 9c7336fea970423989c113561052fd32
-          name: 'PVE qemu raw'
-          type: HTTP_AGENT
-          key: pve.nodes.qemu.raw
-          delay: '300'
-          history: '0'
-          value_type: TEXT
-          trends: '0'
-          description: 'Master item. Raw JSON from /nodes/{node}/qemu?full=1. Used as source for all QEMU/KVM VM dependent items and discovery rules.'
-          url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/qemu?full=1'
-          headers:
-            - name: Authorization
-              value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
-            - name: Accept
-              value: application/json
-          tags:
-            - tag: PVE
-              value: Raw
         - uuid: 294f426f0a9a492598bbf7ea7ba46d9d
           name: 'PVE nodes raw'
           type: HTTP_AGENT
@@ -1779,7 +1743,7 @@ zabbix_export:
                   error_handler: DISCARD_VALUE
                 - type: REGEX
                   parameters:
-                    - '^(OK|running|stopped|error|unknown error)$'
+                    - '^(OK|running|stopped|error)$'
                     - \0
                   error_handler: CUSTOM_VALUE
                   error_handler_params: '4'
@@ -2043,10 +2007,14 @@ zabbix_export:
                   value: '{#DISK_DEV}'
               trigger_prototypes:
                 - uuid: e1ea4b0beadb4577a6b71421c12761a1
-                  expression: 'last(/Template Proxmox VE REST API/disk.health[{#DISK_DEV}])<>"PASSED"'
+                  expression: |
+                    last(/Template Proxmox VE REST API/disk.health[{#DISK_DEV}])<>"PASSED"
+                    and last(/Template Proxmox VE REST API/disk.health[{#DISK_DEV}])<>"OK"
+                    and last(/Template Proxmox VE REST API/disk.health[{#DISK_DEV}])<>"UNKNOWN"
+                    and last(/Template Proxmox VE REST API/disk.health[{#DISK_DEV}])<>"SMART Disabled"
                   name: 'Disk {#DISK_DEV} ({#DISK_MODEL}) SMART health not PASSED on {HOST.NAME}'
                   priority: HIGH
-                  description: 'SMART health check for disk {#DISK_DEV} returned a non-PASSED status. Immediate investigation recommended.'
+                  description: 'SMART health check for disk {#DISK_DEV} returned a failed status. PASSED and OK are the healthy verdicts. UNKNOWN and SMART Disabled mean the disk reports no assessment at all and are not treated as a failure.'
                   manual_close: 'YES'
             - uuid: 8f6a409c8d1c40dd8ddb78d029f7dcbc
               name: 'Disk {#DISK_DEV} size'
@@ -2140,6 +2108,7 @@ zabbix_export:
                           }
                       }
                       throw 'no temperature in SMART data';
+                  error_handler: DISCARD_VALUE
               master_item:
                 key: 'disk.smart.raw[{#DISK_DEV}]'
               tags:
@@ -2428,10 +2397,10 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].maxswap.first()'
+                    - '$.data.maxswap'
                   error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.lxc.raw
+                key: 'lxc.status.raw[{#VMID}]'
               tags:
                 - tag: LXC-Container
                   value: Memory
@@ -2664,8 +2633,9 @@ zabbix_export:
               trigger_prototypes:
                 - uuid: ff83e8f239e246b0a1c385029fe3941d
                   expression: |
-                    min(/Template Proxmox VE REST API/lxc.status[{#VMID}],900)=0
-                    and {$ENABLE_VM_STOP_ALERT:"{#VMID}"}=1 and max(/Template Proxmox VE REST API/lxc.status[{#VMID}],24h)=1
+                    max(/Template Proxmox VE REST API/lxc.status[{#VMID}],900)=0
+                    and {$ENABLE_VM_STOP_ALERT:"{#VMID}"}=1
+                    and count(/Template Proxmox VE REST API/lxc.status[{#VMID}],24h,"eq","1")>0
                   recovery_mode: RECOVERY_EXPRESSION
                   recovery_expression: 'last(/Template Proxmox VE REST API/lxc.status[{#VMID}])=1'
                   name: 'LXC {#VMID} status is stopped'
@@ -2675,6 +2645,28 @@ zabbix_export:
                     {$ENABLE_VM_STOP_ALERT:"{#VMID}"}=1 - Enable the "LXC stopped" trigger. 
                     {$ENABLE_VM_STOP_ALERT:"{#VMID}"}=0 will disable the alert for that item.
                   manual_close: 'YES'
+            - uuid: b4bb7123736a461eb815d1c0ea9e800f
+              name: 'LXC {#VMID} status raw'
+              type: HTTP_AGENT
+              key: 'lxc.status.raw[{#VMID}]'
+              delay: '300'
+              history: '0'
+              value_type: TEXT
+              trends: '0'
+              description: 'Master item. Raw JSON from /nodes/{#NODE}/lxc/{#VMID}/status/current. Addressed through the discovered node instead of {$PVE_NODE}, so the values are also correct for guests running on another cluster node.'
+              url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{#NODE}/lxc/{#VMID}/status/current'
+              headers:
+                - name: Authorization
+                  value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
+                - name: Accept
+                  value: application/json
+              tags:
+                - tag: PVE
+                  value: Raw
+                - tag: LXC-Container
+                  value: '{#VMID}'
+                - tag: vmid
+                  value: '{#VMID}'
             - uuid: 761b499cf31f463e86c66bf0e8d38e1e
               name: 'Swap usage of {#VMID}'
               type: DEPENDENT
@@ -2685,10 +2677,10 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].swap.first()'
+                    - '$.data.swap'
                   error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.lxc.raw
+                key: 'lxc.status.raw[{#VMID}]'
               tags:
                 - tag: LXC-Container
                   value: Memory
@@ -3014,13 +3006,18 @@ zabbix_export:
               key: 'node.status[{#NODE_NAME}]'
               delay: '0'
               trends: '0'
-              description: 'Online status of cluster node {#NODE_NAME}. 1 = online, 0 = offline. Source: /nodes → data[node].status.'
+              description: 'Online status of cluster node {#NODE_NAME}. 1 = online, 0 = offline, 2 = unknown. Source: /nodes → data[node].status. The API returns the enum online, offline or unknown, so unknown is mapped instead of leaving a string that an unsigned item cannot store.'
               valuemap:
                 name: 'Node status'
               preprocessing:
                 - type: JSONPATH
                   parameters:
                     - '$.data[?(@.node=="{#NODE_NAME}")].status.first()'
+                - type: MATCHES_REGEX
+                  parameters:
+                    - '^(online|offline|unknown)$'
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: unknown
                 - type: STR_REPLACE
                   parameters:
                     - online
@@ -3029,6 +3026,10 @@ zabbix_export:
                   parameters:
                     - offline
                     - '0'
+                - type: STR_REPLACE
+                  parameters:
+                    - unknown
+                    - '2'
               master_item:
                 key: pve.nodes.raw
               tags:
@@ -3038,8 +3039,11 @@ zabbix_export:
                   value: '{#NODE_NAME}'
               trigger_prototypes:
                 - uuid: e85b8277a1824f2daf365df1a8ce8de2
-                  expression: 'min(/Template Proxmox VE REST API/node.status[{#NODE_NAME}],900)=0 and {$ENABLE_NODE_STATUS_ALERT:"{#NODE_NAME}"}=1'
-                  name: 'Node status {#NODE_NAME} offline'
+                  expression: |
+                    (min(/Template Proxmox VE REST API/node.status[{#NODE_NAME}],900)=0
+                    or max(/Template Proxmox VE REST API/node.status[{#NODE_NAME}],900)=2)
+                    and {$ENABLE_NODE_STATUS_ALERT:"{#NODE_NAME}"}=1
+                  name: 'Node status {#NODE_NAME} not online'
                   priority: HIGH
                   description: |
                     Use the following host macros to control the "Node status" trigger for each Proxmox node:
@@ -3192,6 +3196,28 @@ zabbix_export:
           enabled_lifetime_type: DISABLE_AFTER
           enabled_lifetime: 2d
           item_prototypes:
+            - uuid: b3f0aab825bb444bbfe35302baeed19e
+              name: 'VM {#VMID} status raw'
+              type: HTTP_AGENT
+              key: 'vm.status.raw[{#VMID}]'
+              delay: '300'
+              history: '0'
+              value_type: TEXT
+              trends: '0'
+              description: 'Master item. Raw JSON from /nodes/{#NODE}/qemu/{#VMID}/status/current. Addressed through the discovered node instead of {$PVE_NODE}, so the values are also correct for guests running on another cluster node.'
+              url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{#NODE}/qemu/{#VMID}/status/current'
+              headers:
+                - name: Authorization
+                  value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
+                - name: Accept
+                  value: application/json
+              tags:
+                - tag: PVE
+                  value: Raw
+                - tag: QEMU/KVM-VMs
+                  value: '{#VMID}'
+                - tag: vmid
+                  value: '{#VMID}'
             - uuid: d828297876d94d078596f76f0da43c38
               name: 'Balloon memory {#VMID}'
               type: DEPENDENT
@@ -3204,10 +3230,10 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})].balloon.first()'
+                    - '$.data.balloon'
                   error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.qemu.raw
+                key: 'vm.status.raw[{#VMID}]'
               tags:
                 - tag: QEMU/KVM-VMs
                   value: Memory
@@ -3319,10 +3345,10 @@ zabbix_export:
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$.data[?(@.vmid=={#VMID})][''running-machine''].first()'
+                    - '$.data["running-machine"]'
                   error_handler: DISCARD_VALUE
               master_item:
-                key: pve.nodes.qemu.raw
+                key: 'vm.status.raw[{#VMID}]'
               tags:
                 - tag: QEMU/KVM-VMs
                   value: 'Machine type'
@@ -3597,7 +3623,12 @@ zabbix_export:
                   value: '{#VMID}'
               trigger_prototypes:
                 - uuid: ac085aa97edb40dcb08272e859a39e36
-                  expression: 'max(/Template Proxmox VE REST API/vm.status[{#VMID}],900)=0 and {$ENABLE_VM_STOP_ALERT:"{#VMID}"}=1 and max(/Template Proxmox VE REST API/vm.status[{#VMID}],24h)=1'
+                  expression: |
+                    max(/Template Proxmox VE REST API/vm.status[{#VMID}],900)=0
+                    and {$ENABLE_VM_STOP_ALERT:"{#VMID}"}=1
+                    and count(/Template Proxmox VE REST API/vm.status[{#VMID}],24h,"eq","1")>0
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Template Proxmox VE REST API/vm.status[{#VMID}])=1'
                   name: 'VM {#VMID} status is stopped'
                   priority: HIGH
                   description: |
@@ -5538,6 +5569,8 @@ zabbix_export:
               newvalue: offline
             - value: '1'
               newvalue: online
+            - value: '2'
+              newvalue: unknown
         - uuid: 0c2c3eccf2504239a1bb1d01c84aa41f
           name: 'PVE secureboot'
           mappings:
