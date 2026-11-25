@@ -303,7 +303,7 @@ zabbix_export:
                       // Robust timestamp conversion: supports epoch (sec/ms), numeric strings, ISO and "YYYY-MM-DD HH:mm:ss"
                       function toEpochMs(v) {
                           if (v === null || v === undefined) return -Infinity;
-                          if (typeof v === "number") return v < 1000000000000 ? v * 1000 : v; // sec → ms
+                          if (typeof v === "number") return v < 1000000000000 ? v * 1000 : v; // sec -> ms
                   
                           if (typeof v === "string") {
                               var s = v.trim();
@@ -867,7 +867,7 @@ zabbix_export:
           delay: '0'
           trends: '0'
           units: '!Cores'
-          description: 'Number of physical CPU cores on the PVE host. Source: /nodes/{node}/status → data.cpuinfo.cores.'
+          description: 'Number of physical CPU cores on the PVE host. Source: /nodes/{node}/status -> data.cpuinfo.cores.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -888,7 +888,7 @@ zabbix_export:
           history: 7d
           value_type: FLOAT
           units: '%'
-          description: 'Share of CPU time spent waiting for I/O in percent (0-100). Source: /nodes/{node}/status → data.wait * 100. High values point to slow or overloaded storage.'
+          description: 'Share of CPU time spent waiting for I/O in percent (0-100). Source: /nodes/{node}/status -> data.wait * 100. High values point to slow or overloaded storage.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -909,7 +909,7 @@ zabbix_export:
           history: 7d
           value_type: FLOAT
           units: '%'
-          description: 'CPU utilization of the PVE host in percent (0-100). Source: /nodes/{node}/status → data.cpu * 100.'
+          description: 'CPU utilization of the PVE host in percent (0-100). Source: /nodes/{node}/status -> data.cpu * 100.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -935,7 +935,7 @@ zabbix_export:
           delay: '0'
           value_type: CHAR
           trends: '0'
-          description: 'CPU model name string of the PVE host. Source: /nodes/{node}/status → data.cpuinfo.model.'
+          description: 'CPU model name string of the PVE host. Source: /nodes/{node}/status -> data.cpuinfo.model.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -955,7 +955,7 @@ zabbix_export:
           delay: '0'
           trends: '0'
           units: '!Threads'
-          description: 'Total number of logical CPU threads (vCPUs) on the PVE host. Source: /nodes/{node}/status → data.cpuinfo.cpus.'
+          description: 'Total number of logical CPU threads (vCPUs) on the PVE host. Source: /nodes/{node}/status -> data.cpuinfo.cpus.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -975,7 +975,7 @@ zabbix_export:
           delay: '0'
           value_type: CHAR
           trends: '0'
-          description: 'Running Linux kernel release string (e.g. 6.8.12-5-pve). Source: /nodes/{node}/status → data["current-kernel"].release.'
+          description: 'Running Linux kernel release string (e.g. 6.8.12-5-pve). Source: /nodes/{node}/status -> data["current-kernel"].release.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1087,7 +1087,7 @@ zabbix_export:
           delay: '0'
           history: 7d
           value_type: FLOAT
-          description: 'System load average over the last 15 minutes. Source: /nodes/{node}/status → data.loadavg[2].'
+          description: 'System load average over the last 15 minutes. Source: /nodes/{node}/status -> data.loadavg[2].'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1104,7 +1104,7 @@ zabbix_export:
           delay: '0'
           history: 7d
           value_type: FLOAT
-          description: 'System load average over the last 5 minutes. Source: /nodes/{node}/status → data.loadavg[1].'
+          description: 'System load average over the last 5 minutes. Source: /nodes/{node}/status -> data.loadavg[1].'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1121,7 +1121,7 @@ zabbix_export:
           delay: '0'
           history: 7d
           value_type: FLOAT
-          description: 'System load average over the last 1 minute. Source: /nodes/{node}/status → data.loadavg[0].'
+          description: 'System load average over the last 1 minute. Source: /nodes/{node}/status -> data.loadavg[0].'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1138,7 +1138,7 @@ zabbix_export:
           delay: '0'
           trends: '0'
           units: unixtime
-          description: 'Current Unix timestamp on the PVE host. Source: /nodes/{node}/time → data.localtime.'
+          description: 'Current Unix timestamp on the PVE host. Source: /nodes/{node}/time -> data.localtime.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1155,7 +1155,7 @@ zabbix_export:
           delay: '0'
           value_type: CHAR
           trends: '0'
-          description: 'Host kernel machine architecture (e.g. x86_64). Source: /nodes/{node}/status → data["current-kernel"].machine.'
+          description: 'Host kernel machine architecture (e.g. x86_64). Source: /nodes/{node}/status -> data["current-kernel"].machine.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1175,7 +1175,7 @@ zabbix_export:
           delay: '0'
           history: 7d
           units: Bytes
-          description: 'RAM available for new workloads on the PVE host in bytes, cache and reclaimable memory included. Source: /nodes/{node}/status → data.memory.available. Together with the used value this adds up to the installed total, which data.memory.free does not.'
+          description: 'RAM available for new workloads on the PVE host in bytes, cache and reclaimable memory included. Source: /nodes/{node}/status -> data.memory.available. Together with the used value this adds up to the installed total, which data.memory.free does not.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1192,7 +1192,7 @@ zabbix_export:
           delay: '0'
           history: 7d
           units: Bytes
-          description: 'Total installed RAM on the PVE host in bytes. Source: /nodes/{node}/status → data.memory.total.'
+          description: 'Total installed RAM on the PVE host in bytes. Source: /nodes/{node}/status -> data.memory.total.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1212,7 +1212,7 @@ zabbix_export:
           delay: '0'
           history: 7d
           units: Bytes
-          description: 'Used RAM on the PVE host in bytes. Source: /nodes/{node}/status → data.memory.used.'
+          description: 'Used RAM on the PVE host in bytes. Source: /nodes/{node}/status -> data.memory.used.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1243,7 +1243,7 @@ zabbix_export:
           value_type: FLOAT
           trends: '0'
           units: '!MHz'
-          description: 'CPU clock speed in MHz of the PVE host processor. Source: /nodes/{node}/status → data.cpuinfo.mhz.'
+          description: 'CPU clock speed in MHz of the PVE host processor. Source: /nodes/{node}/status -> data.cpuinfo.mhz.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1387,7 +1387,7 @@ zabbix_export:
           delay: '0'
           history: 7d
           units: Bytes
-          description: 'Available free space on the PVE root filesystem (/) in bytes. Source: /nodes/{node}/status → data.rootfs.avail.'
+          description: 'Available free space on the PVE root filesystem (/) in bytes. Source: /nodes/{node}/status -> data.rootfs.avail.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1404,7 +1404,7 @@ zabbix_export:
           delay: '0'
           history: 7d
           units: Bytes
-          description: 'Total size of the PVE root filesystem (/) in bytes. Source: /nodes/{node}/status → data.rootfs.total.'
+          description: 'Total size of the PVE root filesystem (/) in bytes. Source: /nodes/{node}/status -> data.rootfs.total.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1424,7 +1424,7 @@ zabbix_export:
           delay: '0'
           history: 7d
           units: Bytes
-          description: 'Used space on the PVE root filesystem (/) in bytes. Source: /nodes/{node}/status → data.rootfs.used.'
+          description: 'Used space on the PVE root filesystem (/) in bytes. Source: /nodes/{node}/status -> data.rootfs.used.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1473,7 +1473,7 @@ zabbix_export:
           delay: '0'
           trends: '0'
           units: '!Sockets'
-          description: 'Number of physical CPU sockets on the PVE host. Source: /nodes/{node}/status → data.cpuinfo.sockets.'
+          description: 'Number of physical CPU sockets on the PVE host. Source: /nodes/{node}/status -> data.cpuinfo.sockets.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1673,7 +1673,7 @@ zabbix_export:
           delay: '0'
           history: 7d
           units: Bytes
-          description: 'Free swap space on the PVE host in bytes. Source: /nodes/{node}/status → data.swap.free. Reports 0 on hosts without swap.'
+          description: 'Free swap space on the PVE host in bytes. Source: /nodes/{node}/status -> data.swap.free. Reports 0 on hosts without swap.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1690,7 +1690,7 @@ zabbix_export:
           delay: '0'
           history: 7d
           units: Bytes
-          description: 'Configured swap space on the PVE host in bytes. Source: /nodes/{node}/status → data.swap.total. Reports 0 on hosts without swap.'
+          description: 'Configured swap space on the PVE host in bytes. Source: /nodes/{node}/status -> data.swap.total. Reports 0 on hosts without swap.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1710,7 +1710,7 @@ zabbix_export:
           delay: '0'
           history: 7d
           units: Bytes
-          description: 'Used swap space on the PVE host in bytes. Source: /nodes/{node}/status → data.swap.used. Swap filling up while memory is not tight usually means pages were evicted during an earlier peak and never came back.'
+          description: 'Used swap space on the PVE host in bytes. Source: /nodes/{node}/status -> data.swap.used. Swap filling up while memory is not tight usually means pages were evicted during an earlier peak and never came back.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1727,7 +1727,7 @@ zabbix_export:
           delay: '0'
           value_type: CHAR
           trends: '0'
-          description: 'Boot mode of the PVE host (e.g. efi, legacy-bios). Source: /nodes/{node}/status → data["boot-info"].mode.'
+          description: 'Boot mode of the PVE host (e.g. efi, legacy-bios). Source: /nodes/{node}/status -> data["boot-info"].mode.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1748,7 +1748,7 @@ zabbix_export:
           delay: '0'
           value_type: CHAR
           trends: '0'
-          description: 'Secure Boot status on the PVE host. 0 = disabled, 1 = enabled. Source: /nodes/{node}/status → data["boot-info"].secureboot.'
+          description: 'Secure Boot status on the PVE host. 0 = disabled, 1 = enabled. Source: /nodes/{node}/status -> data["boot-info"].secureboot.'
           valuemap:
             name: 'PVE secureboot'
           preprocessing:
@@ -1808,7 +1808,7 @@ zabbix_export:
                                   return Date.UTC(+m[1], +m[2]-1, +m[3], H, +m[5], +m[6]);
                               }
                   
-                              // Fallback: parse as ISO-compatible string (Leerraum → 'T')
+                              // Fallback: parse as ISO-compatible string (Leerraum -> 'T')
                               var p = Date.parse(s.replace(/\s+/, "T"));
                               return isNaN(p) ? -Infinity : p;
                           }
@@ -1902,7 +1902,7 @@ zabbix_export:
           delay: '0'
           value_type: CHAR
           trends: '0'
-          description: 'Timezone configured on the PVE host (e.g. Europe/Berlin). Source: /nodes/{node}/time → data.timezone.'
+          description: 'Timezone configured on the PVE host (e.g. Europe/Berlin). Source: /nodes/{node}/time -> data.timezone.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1922,7 +1922,7 @@ zabbix_export:
           delay: '0'
           trends: '0'
           units: s
-          description: 'Uptime of the PVE host in seconds since last boot. Source: /nodes/{node}/status → data.uptime.'
+          description: 'Uptime of the PVE host in seconds since last boot. Source: /nodes/{node}/status -> data.uptime.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -1981,7 +1981,7 @@ zabbix_export:
           history: '0'
           value_type: CHAR
           trends: '0'
-          description: 'Proxmox VE version string, for example 9.2.10. Source: /nodes/{node}/status → data.pveversion, which carries it as pve-manager/9.2.10/<repoid>. Read from the host status instead of the separate version endpoint, so no extra request per interval is needed.'
+          description: 'Proxmox VE version string, for example 9.2.10. Source: /nodes/{node}/status -> data.pveversion, which carries it as pve-manager/9.2.10/<repoid>. Read from the host status instead of the separate version endpoint, so no extra request per interval is needed.'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -2054,7 +2054,7 @@ zabbix_export:
               delay: '0'
               history: 7d
               units: unixtime
-              description: 'Unix timestamp of the last backup job end time for VM/CT {#ID}. Source: pve.backup.raw → data[bckpid].endtime.'
+              description: 'Unix timestamp of the last backup job end time for VM/CT {#ID}. Source: pve.backup.raw -> data[bckpid].endtime.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
@@ -2102,7 +2102,7 @@ zabbix_export:
               delay: '0'
               history: 7d
               units: unixtime
-              description: 'Unix timestamp of the last backup job start time for VM/CT {#ID}. Source: pve.backup.raw → data[bckpid].starttime.'
+              description: 'Unix timestamp of the last backup job start time for VM/CT {#ID}. Source: pve.backup.raw -> data[bckpid].starttime.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
@@ -3367,6 +3367,56 @@ zabbix_export:
           delay: '0'
           description: 'Discovers physical disks from /nodes/{node}/disks/list. Covers every disk type Proxmox VE reports, including SATA, SAS and NVMe. The wearout item is skipped for rotating disks, which do not expose that value.'
           item_prototypes:
+            - uuid: 972b6b3cf618410dbce5b61e778ffeab
+              name: 'Disk {#DISK_DEV} CRC errors'
+              type: DEPENDENT
+              key: 'disk.crc.errors[{#DISK_DEV}]'
+              delay: '0'
+              history: 7d
+              description: 'Interface CRC error count of disk {#DISK_DEV} ({#DISK_MODEL}), SMART attribute 199 (UDMA_CRC_Error_Count). The counter counts transfer errors between disk and controller, typically caused by a bad SATA cable, backplane or connector, not by the disk itself. It never resets. Only SATA disks report it, NVMe and SAS disks deliver no value.'
+              preprocessing:
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      // Only type=ata carries the numbered attribute list, attribute 199 is the
+                      // interface CRC counter (named UDMA_CRC_Error_Count or CRC_Error_Count).
+                      // NVMe and SAS disks have no attribute 199, the empty result is discarded
+                      // by the next step (an error handler on a JavaScript step is not kept).
+                      var d = JSON.parse(value).data;
+                      if (!d || !d.attributes) {
+                          return '';
+                      }
+                      for (var i = 0; i < d.attributes.length; i++) {
+                          var a = d.attributes[i];
+                          // Proxmox keeps the attribute id as a space padded string
+                          if (String(a.id).replace(/\s/g, '') !== '199') {
+                              continue;
+                          }
+                          var r = String(a.raw).match(/\d+/);
+                          if (r) {
+                              return r[0];
+                          }
+                      }
+                      return '';
+                - type: MATCHES_REGEX
+                  parameters:
+                    - '^[0-9]+$'
+                  error_handler: DISCARD_VALUE
+              master_item:
+                key: 'disk.smart.raw[{#DISK_DEV}]'
+              tags:
+                - tag: PVE
+                  value: Disk
+                - tag: PVE
+                  value: '{#DISK_DEV}'
+              trigger_prototypes:
+                - uuid: 09d01679052a43df80b355774fb6a117
+                  expression: 'last(/Template Proxmox VE REST API/disk.crc.errors[{#DISK_DEV}])-min(/Template Proxmox VE REST API/disk.crc.errors[{#DISK_DEV}],24h)>0'
+                  name: 'Disk {#DISK_DEV} ({#DISK_MODEL}) CRC errors increasing on {HOST.NAME}'
+                  opdata: 'CRC errors: {ITEM.LASTVALUE1}'
+                  priority: AVERAGE
+                  description: 'The interface CRC counter rose within the last 24 hours. The disk itself is usually fine, the cause is the SATA cable, the backplane or the connector. Replace the cable first. SMART health stays PASSED in this case, so this trigger is the only early warning. The problem clears once the counter has not risen for 24 hours.'
+                  manual_close: 'YES'
             - uuid: 34f801ed3d4f492bb997c571addb024a
               name: 'Disk {#DISK_DEV} health'
               type: DEPENDENT
@@ -4529,7 +4579,7 @@ zabbix_export:
               key: 'node.status[{#NODE_NAME}]'
               delay: '0'
               trends: '0'
-              description: 'Online status of cluster node {#NODE_NAME}. 1 = online, 0 = offline, 2 = unknown. Source: /nodes → data[node].status. The API returns the enum online, offline or unknown, so unknown is mapped instead of leaving a string that an unsigned item cannot store.'
+              description: 'Online status of cluster node {#NODE_NAME}. 1 = online, 0 = offline, 2 = unknown. Source: /nodes -> data[node].status. The API returns the enum online, offline or unknown, so unknown is mapped instead of leaving a string that an unsigned item cannot store.'
               valuemap:
                 name: 'Node status'
               preprocessing:
@@ -4579,7 +4629,7 @@ zabbix_export:
               delay: '0'
               trends: '0'
               units: s
-              description: 'Uptime of cluster node {#NODE_NAME} in seconds. Source: /nodes → data[node].uptime.'
+              description: 'Uptime of cluster node {#NODE_NAME} in seconds. Source: /nodes -> data[node].uptime.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
@@ -5630,7 +5680,7 @@ zabbix_export:
               delay: '0'
               value_type: CHAR
               trends: '0'
-              description: 'Content types supported by storage pool {#STORAGE_NAME} (e.g. images,backup,iso). Source: /nodes/{node}/storage → data[storage].content.'
+              description: 'Content types supported by storage pool {#STORAGE_NAME} (e.g. images,backup,iso). Source: /nodes/{node}/storage -> data[storage].content.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
@@ -5652,7 +5702,7 @@ zabbix_export:
               delay: '0'
               value_type: CHAR
               trends: '0'
-              description: 'Storage backend type/driver of {#STORAGE_NAME} (e.g. dir, zfspool, lvm, nfs). Source: /nodes/{node}/storage → data[storage].type.'
+              description: 'Storage backend type/driver of {#STORAGE_NAME} (e.g. dir, zfspool, lvm, nfs). Source: /nodes/{node}/storage -> data[storage].type.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
@@ -6055,7 +6105,7 @@ zabbix_export:
               delay: '0'
               history: 7d
               units: unixtime
-              description: 'Account expiration date/time for PVE user {#USERID} as Unix timestamp. 0 = never expires. Source: /access/users → data[userid].expire.'
+              description: 'Account expiration date/time for PVE user {#USERID} as Unix timestamp. 0 = never expires. Source: /access/users -> data[userid].expire.'
               preprocessing:
                 - type: JSONPATH
                   parameters:
@@ -6155,7 +6205,7 @@ zabbix_export:
               key: 'user.status[{#USERID}]'
               delay: '0'
               trends: '0'
-              description: 'Account status of PVE user {#USERID}. 1 = enabled, 0 = disabled. Source: /access/users → data[userid].enable.'
+              description: 'Account status of PVE user {#USERID}. 1 = enabled, 0 = disabled. Source: /access/users -> data[userid].enable.'
               valuemap:
                 name: 'User status'
               preprocessing:
@@ -6229,6 +6279,82 @@ zabbix_export:
                   value: ZFS
                 - tag: PVE
                   value: '{#ZPOOL}'
+            - uuid: 18549e8fc6064f78b6459a2fbf233ae5
+              name: 'ZFS pool detail raw {#ZPOOL}'
+              type: HTTP_AGENT
+              key: 'zfs.detail.raw[{#ZPOOL}]'
+              delay: '3600'
+              history: '0'
+              value_type: TEXT
+              trends: '0'
+              description: 'Master item. Raw JSON from /nodes/{node}/disks/zfs/{pool}, the zpool status tree with read, write and checksum error counters per device.'
+              timeout: 20s
+              url: 'https://{$PVE_IP}:{$PVE_PORT}/api2/json/nodes/{$PVE_NODE}/disks/zfs/{#ZPOOL}'
+              headers:
+                - name: Authorization
+                  value: 'PVEAPIToken={$PVE_API_USER}!{$PVE_API_TOKEN_ID}={$PVE_API_TOKEN}'
+                - name: Accept
+                  value: application/json
+              tags:
+                - tag: PVE
+                  value: Raw
+                - tag: PVE
+                  value: '{#ZPOOL}'
+            - uuid: ba3712ca119647eeb0d49da8e93bf8c0
+              name: 'ZFS pool device errors {#ZPOOL}'
+              type: DEPENDENT
+              key: 'zfs.errors[{#ZPOOL}]'
+              delay: '0'
+              history: 7d
+              description: 'Sum of the read, write and checksum error counters of all devices in the pool, as shown by zpool status. The counters stay until zpool clear resets them.'
+              preprocessing:
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      // The detail endpoint returns the pool as a tree (pool -> vdevs -> devices).
+                      // Every node carries its own counters, zpool shortens large ones (1.2K).
+                      var d = JSON.parse(value).data;
+                      if (!d || !d.children) {
+                          throw 'no ZFS pool detail';
+                      }
+                      function num(v) {
+                          var m = String(v === undefined || v === null ? 0 : v).match(/^([0-9.]+)\s*([KMGTP]?)/);
+                          if (!m) {
+                              return 0;
+                          }
+                          var e = m[2] ? 'KMGTP'.indexOf(m[2]) + 1 : 0;
+                          return Math.round(parseFloat(m[1]) * Math.pow(1024, e));
+                      }
+                      function sum(n) {
+                          var s = num(n.read) + num(n.write) + num(n.cksum);
+                          for (var i = 0; n.children && i < n.children.length; i++) {
+                              s += sum(n.children[i]);
+                          }
+                          return s;
+                      }
+                      var t = 0;
+                      for (var i = 0; i < d.children.length; i++) {
+                          t += sum(d.children[i]);
+                      }
+                      return t;
+                - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: 'zfs.detail.raw[{#ZPOOL}]'
+              tags:
+                - tag: PVE
+                  value: ZFS
+                - tag: PVE
+                  value: '{#ZPOOL}'
+              trigger_prototypes:
+                - uuid: aeeb7c355776417690ac2536048258c7
+                  expression: 'last(/Template Proxmox VE REST API/zfs.errors[{#ZPOOL}])>0'
+                  name: 'ZFS pool {#ZPOOL} has device errors on {HOST.NAME}'
+                  opdata: 'Errors: {ITEM.LASTVALUE1}'
+                  priority: AVERAGE
+                  description: 'At least one device in the pool reports read, write or checksum errors, even if the pool is still ONLINE. Check zpool status {#ZPOOL} for the device. Checksum errors on a healthy disk often point to a cable or controller. After fixing the cause, zpool clear {#ZPOOL} resets the counters and closes the problem.'
+                  manual_close: 'YES'
             - uuid: 673b04f727fa43ddaec262e4b73edb20
               name: 'ZFS pool fragmentation {#ZPOOL}'
               type: DEPENDENT

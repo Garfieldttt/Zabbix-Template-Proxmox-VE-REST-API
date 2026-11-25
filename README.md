@@ -19,16 +19,16 @@ Works on standalone single-node setups as well as full clusters. Ceph is detecte
 ### Option A, Without Privilege Separation (recommended, simpler)
 
 1. **Create a user** (skip if using `root@pam`)
-   - **Datacenter → Permissions → Users → Add**
-   - User: `zabbix@pam`, set a password → **Add**
+   - **Datacenter -> Permissions -> Users -> Add**
+   - User: `zabbix@pam`, set a password -> **Add**
 
 2. **Assign read-only role to the user**
-   - **Datacenter → Permissions → Add → User Permission**
-   - Path: `/` · User: `zabbix@pam` · Role: `PVEAuditor` · Propagate: ✓ → **Add**
+   - **Datacenter -> Permissions -> Add -> User Permission**
+   - Path: `/` · User: `zabbix@pam` · Role: `PVEAuditor` · Propagate: enabled -> **Add**
 
 3. **Create the API token**
-   - **Datacenter → Permissions → API Tokens → Add**
-   - User: `zabbix@pam` · Token ID: `Zabbix` · **Privilege Separation: disabled** → **Add**
+   - **Datacenter -> Permissions -> API Tokens -> Add**
+   - User: `zabbix@pam` · Token ID: `Zabbix` · **Privilege Separation: disabled** -> **Add**
    - **Copy the token secret, it is shown only once.**
 
 The token inherits all permissions from the user. Header format:
@@ -43,12 +43,12 @@ PVEAPIToken=zabbix@pam!Zabbix=<token-secret>
 1. Follow steps 1-2 from Option A.
 
 2. **Create the API token**
-   - **Datacenter → Permissions → API Tokens → Add**
-   - User: `zabbix@pam` · Token ID: `Zabbix` · **Privilege Separation: enabled** → **Add**
+   - **Datacenter -> Permissions -> API Tokens -> Add**
+   - User: `zabbix@pam` · Token ID: `Zabbix` · **Privilege Separation: enabled** -> **Add**
 
 3. **Grant permission to the token explicitly**
-   - **Datacenter → Permissions → Add → API Token Permission**
-   - Path: `/` · Token: `zabbix@pam!Zabbix` · Role: `PVEAuditor` · Propagate: ✓ → **Add**
+   - **Datacenter -> Permissions -> Add -> API Token Permission**
+   - Path: `/` · Token: `zabbix@pam!Zabbix` · Role: `PVEAuditor` · Propagate: enabled -> **Add**
 
 > **Permissions:** `PVEAuditor` covers every item enabled by default, Ceph included. Disks and ZFS need `Sys.Audit` on path `/`, not on `/nodes/{node}`. An item without permission turns unsupported (HTTP 403); check that the role is set on `/` with **Propagate** enabled.
 
@@ -59,9 +59,9 @@ PVEAPIToken=zabbix@pam!Zabbix=<token-secret>
 ## 2. Installation
 
 1. Download `template_proxmox-ve-rest-api.yaml`
-2. In Zabbix: **Data collection → Templates → Import**
+2. In Zabbix: **Data collection -> Templates -> Import**
 3. Create a new host:
-   - **Data collection → Hosts → Create host**
+   - **Data collection -> Hosts -> Create host**
    - Host name: e.g. `proxmox01`
    - Template: `Template Proxmox VE REST API`
    - Group: e.g. `Virtual machines`
@@ -88,7 +88,7 @@ A standalone node needs nothing beyond steps 1-4.
 |-------|---------|-------------|
 | `{$PVE_IP}` | `192.168.1.10` | IP address or hostname of the PVE server |
 | `{$PVE_PORT}` | `8006` | API port (default: 8006) |
-| `{$PVE_NODE}` | `pve` | Node name as shown in PVE (Datacenter → Node) |
+| `{$PVE_NODE}` | `pve` | Node name as shown in PVE (Datacenter -> Node) |
 | `{$PVE_API_USER}` | `zabbix@pam` | API user including realm |
 | `{$PVE_API_TOKEN_ID}` | `Zabbix` | Token ID |
 | `{$PVE_API_TOKEN}` | *(secret)* | Token secret, set as **Secret text** macro type |
@@ -196,9 +196,9 @@ Set to `0` to suppress a trigger globally. Supports context macros for per-insta
 | `discover.ha.resources` | `/cluster/ha/status/current` | HA-protected VMs and containers |
 | `discover.ha.lrm` | `/cluster/ha/status/current` | The HA local resource manager of every node |
 | `discover.sdn` | `/cluster/resources` | SDN zones per node (Proxmox VE 9) |
-| `discover.disks` | `/nodes/{node}/disks/list` | Physical disks of any type with SMART health, temperature, size and wearout |
+| `discover.disks` | `/nodes/{node}/disks/list` | Physical disks of any type with SMART health, temperature, size, wearout and SATA CRC errors |
 | `discover.pve.services` | `/nodes/{node}/services` | The systemd units PVE manages, with SubState, UnitFileState and ActiveState |
-| `discover.zfs.pools` | `/nodes/{node}/disks/zfs` | Local ZFS pools with health, size, allocated, free, fragmentation, dedup ratio and calculated utilization |
+| `discover.zfs.pools` | `/nodes/{node}/disks/zfs` | Local ZFS pools with health, device errors (read, write, checksum), size, allocated, free, fragmentation, dedup ratio and calculated utilization |
 | `discover.replication` | `/nodes/{node}/replication` | ZFS replication jobs with fail count, last sync, last try, duration and error message |
 | `discover.certificates` | `/nodes/{node}/certificates/info` | Node certificates with expiry timestamp, subject and issuer |
 | `discover.ceph.cluster` | `/cluster/ceph/status` | The Ceph cluster, only when Ceph is set up |
@@ -272,10 +272,12 @@ Every rule handles an empty list: a cluster without HA, replication jobs, contai
 | SDN zone in error state | Warning |
 | Disk SMART health not PASSED | High |
 | Disk temperature above `{$DISK.TEMP.MAX}` | Warning |
+| Disk CRC errors increasing (SATA cable or backplane) | Average |
 | Disk no longer reported by the node | Average |
 | SSD wearout below threshold | Warning |
 | PVE service not running | Average |
 | ZFS pool not ONLINE | High |
+| ZFS pool device errors (read, write, checksum) | Average |
 | ZFS pool fragmentation above `{$ZFS.FRAG.WARN}` | Warning |
 | ZFS pool usage over warning / critical threshold | Average / High |
 | Replication job failing | Average |
